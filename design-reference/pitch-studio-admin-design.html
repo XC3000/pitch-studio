@@ -1,0 +1,1036 @@
+<title>CMA Pitch Studio — Admin Design</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --ground:#F2F6FC; --panel:#FFFFFF; --panel-2:#F6F8FC; --line:#E2E8F0;
+  --ink:#1E293B; --ink-2:#64748B; --ink-3:#94A3B8;
+  --accent:#3D5BF5; --accent-2:#4C6FFF; --accent-soft:#EEF3FF; --accent-line:rgba(61,91,245,.3);
+  --ok:#22A06B; --ok-soft:#E7F6EF;
+  --warn:#B45309; --warn-soft:#FEF3E2;
+  --bad:#E24545; --bad-soft:rgba(226,69,69,.10);
+  --shadow:0 20px 50px -34px rgba(30,58,138,.30);
+  --shadow-lg:0 30px 70px -34px rgba(30,58,138,.40);
+  --radius:16px;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#0E1420; --panel:#151D2C; --panel-2:#1B2536; --line:#26324A;
+    --ink:#E6ECF5; --ink-2:#9DAAC2; --ink-3:#66748E;
+    --accent-soft:rgba(61,91,245,.16); --accent-line:rgba(61,91,245,.42);
+    --ok-soft:rgba(47,178,124,.15); --warn:#E0A32E; --warn-soft:rgba(224,163,46,.15);
+    --shadow:0 20px 50px -30px rgba(0,0,0,.6); --shadow-lg:0 30px 70px -30px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1420; --panel:#151D2C; --panel-2:#1B2536; --line:#26324A;
+  --ink:#E6ECF5; --ink-2:#9DAAC2; --ink-3:#66748E;
+  --accent-soft:rgba(61,91,245,.16); --accent-line:rgba(61,91,245,.42);
+  --ok-soft:rgba(47,178,124,.15); --warn:#E0A32E; --warn-soft:rgba(224,163,46,.15);
+  --shadow:0 20px 50px -30px rgba(0,0,0,.6); --shadow-lg:0 30px 70px -30px rgba(0,0,0,.7);
+}
+:root[data-theme="light"]{
+  --ground:#F2F6FC; --panel:#FFFFFF; --panel-2:#F6F8FC; --line:#E2E8F0;
+  --ink:#1E293B; --ink-2:#64748B; --ink-3:#94A3B8;
+  --accent-soft:#EEF3FF; --accent-line:rgba(61,91,245,.3);
+  --ok-soft:#E7F6EF; --warn:#B45309; --warn-soft:#FEF3E2;
+  --shadow:0 20px 50px -34px rgba(30,58,138,.30); --shadow-lg:0 30px 70px -34px rgba(30,58,138,.40);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;
+  font-size:14px;line-height:1.5}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.02em}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font:600 10px/1 Inter,system-ui;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ── top bar ── */
+.top{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid var(--line);
+  background:var(--panel);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .cma{font:italic 800 17px Georgia,serif;color:var(--bad)}
+.brand .name{font:700 13px Inter,system-ui;letter-spacing:.22em;color:var(--ink)}
+.brand .sub{font:600 8px Inter,system-ui;letter-spacing:.2em;color:var(--bad);margin-top:2px}
+.divider{width:1px;height:26px;background:var(--line)}
+.studio{font:700 15px Inter,system-ui;letter-spacing:-.01em}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tab{padding:8px 14px;border-radius:999px;border:1px solid transparent;background:transparent;
+  color:var(--ink-2);font:600 12.5px Inter,system-ui;transition:.15s}
+.tab:hover{color:var(--ink)}
+.tab.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.chip-quiet{font:600 11px Inter,system-ui;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+.avatar-dot{width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,var(--accent-2),var(--accent));
+  display:flex;align-items:center;justify-content:center;font:700 11px Inter,system-ui;color:#fff}
+.themebtn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);border-radius:8px;
+  width:32px;height:32px;font-size:14px}
+
+/* ── screens ── */
+.screen{display:none}
+.screen.on{display:block}
+.btn-primary{font:600 13px Inter,system-ui;color:#fff;background:linear-gradient(140deg,var(--accent-2),var(--accent));
+  border:none;border-radius:10px;padding:11px 20px;box-shadow:0 12px 26px -10px rgba(61,91,245,.55)}
+
+/* ═══ PRESENTATIONS (multi) ═══ */
+.pwrap{max-width:1360px;margin:0 auto;padding:34px 28px;display:flex;gap:26px;align-items:flex-start}
+.pmain{flex:1;min-width:0}
+.phead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.phead h2{font-size:24px}
+.phead .sub{font:400 13px Inter,system-ui;color:var(--ink-2);margin-top:6px;max-width:560px}
+.pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.pstat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.pstat .l{font:600 10px Inter,system-ui;letter-spacing:.12em;color:var(--ink-3)}
+.pstat .n{font:700 26px Inter,system-ui;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
+.pstat .n.ok{color:var(--ok)}
+.ptablewrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-top:22px;
+  overflow:hidden;box-shadow:var(--shadow)}
+.prow{display:grid;grid-template-columns:2.1fr .8fr 1.5fr 1.1fr .9fr 2fr;gap:12px;padding:16px 22px;
+  border-bottom:1px solid var(--line);align-items:center}
+.prow:last-child{border-bottom:none}
+.prow.hd{padding:13px 22px;background:var(--panel-2)}
+.prow.hd div{font:600 10px Inter,system-ui;letter-spacing:.12em;color:var(--ink-3)}
+.pname{font:600 13.5px Inter,system-ui;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:none;border:none;padding:0;text-align:left;width:100%}
+.pname:hover{color:var(--accent)}
+.pfor{font:400 11.5px Inter,system-ui;color:var(--ink-3);margin-top:3px}
+.langchip{font:600 11px Inter,system-ui;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:4px 9px}
+.pmodel{font:500 12px Inter,system-ui;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmodel-sub{font:400 10.5px Inter,system-ui;color:var(--ink-3);margin-top:2px}
+.pviews{font:600 12.5px Inter,system-ui;color:var(--ink)}
+.popened{font:400 10.5px Inter,system-ui;color:var(--ink-3);margin-top:2px}
+.stpill{font:700 10px Inter,system-ui;letter-spacing:.08em;border-radius:999px;padding:5px 11px}
+.stpill.live{color:var(--ok);background:var(--ok-soft)}
+.stpill.draft{color:var(--warn);background:var(--warn-soft)}
+.linkcell{display:flex;align-items:center;gap:8px;min-width:0}
+.linkbox{flex:1;min-width:0;font:500 11.5px var(--mono);color:var(--ink-2);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:8px;padding:7px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copybtn{flex:none;font:600 11px Inter,system-ui;color:var(--accent);background:var(--accent-soft);
+  border:1px solid var(--accent-line);border-radius:8px;padding:7px 12px;transition:.2s}
+.copybtn.copied{color:var(--ok);background:var(--ok-soft);border-color:rgba(34,160,107,.35)}
+.pfoot{font:400 11.5px Inter,system-ui;color:var(--ink-3);margin-top:14px;line-height:1.6}
+.pfoot code{font-family:var(--mono);color:var(--ink-2);font-size:11px}
+
+/* create panel */
+.createpanel{flex:none;width:380px;background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:26px;box-shadow:var(--shadow-lg)}
+.createpanel .ph{display:flex;justify-content:space-between;align-items:flex-start}
+.createpanel h3{font-size:17px}
+.createpanel .psub{font:400 12px Inter,system-ui;color:var(--ink-3);margin-top:4px}
+.closebtn{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);
+  color:var(--ink-2);font:400 14px Inter,system-ui}
+.lbl{font:600 10.5px Inter,system-ui;letter-spacing:.08em;color:var(--ink-2);margin:0 0 6px;text-transform:uppercase;display:block}
+.fld{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 13px;
+  font:400 13px Inter,system-ui;color:var(--ink);outline:none;transition:border-color .2s}
+.fld:focus{border-color:var(--accent)}
+.frow{margin-top:16px}
+.frow2{margin-top:16px;display:flex;gap:12px}
+.frow2>div{flex:1;min-width:0}
+.modelrow{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px}
+.modelface{flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(140deg,#EFBE93,#E3AC7F);
+  border:2px solid var(--panel);box-shadow:0 4px 12px -4px rgba(30,58,138,.3)}
+.modelnm{font:600 12.5px Inter,system-ui;color:var(--ink)}
+.modelsub{font:400 10.5px Inter,system-ui;color:var(--ink-3);margin-top:2px}
+.linkpreview{font:500 12.5px var(--mono);color:var(--accent);background:var(--accent-soft);
+  border:1px solid var(--accent-line);border-radius:10px;padding:11px 13px;word-break:break-all}
+.linkhint{font:400 11px/1.6 Inter,system-ui;color:var(--ink-3);margin-top:10px}
+.linkhint b{color:var(--ink-2);font-weight:600}
+.createbtn{width:100%;margin-top:18px;font:600 13px Inter,system-ui;color:#fff;
+  background:linear-gradient(140deg,var(--accent-2),var(--accent));border:none;border-radius:12px;padding:13px 0;
+  box-shadow:0 14px 30px -12px rgba(61,91,245,.6);transition:.2s}
+.createbtn.done{background:var(--ok);box-shadow:0 14px 30px -12px rgba(34,160,107,.5)}
+.sep{border-top:1px solid var(--line);margin-top:22px;padding-top:18px}
+
+/* share-link cards */
+.actbtn{font:600 11px Inter,system-ui;color:var(--ink-2);background:transparent;border:1px solid var(--line);
+  border-radius:8px;padding:7px 12px;transition:.15s}
+.actbtn:hover{border-color:var(--accent-line);color:var(--accent)}
+.actbtn.primary{color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line)}
+.linkcard{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--panel-2)}
+.linkcard + .linkcard{margin-top:10px}
+.linkcard.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.lc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.lc-to{font:600 13px Inter,system-ui;color:var(--ink)}
+.lc-meta{font:500 10.5px Inter,system-ui;color:var(--ink-3);margin-top:3px}
+.lc-meta b{color:var(--ink-2);font-weight:600}
+.lc-actions{display:flex;gap:7px;margin-top:10px}
+.lc-edit{display:none;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.linkcard.editing .lc-edit{display:block}
+.stpill.revoked{color:var(--bad);background:var(--bad-soft)}
+.ov-chip{font:600 9px Inter,system-ui;letter-spacing:.06em;color:var(--warn);background:var(--warn-soft);
+  border-radius:5px;padding:2px 6px;text-transform:uppercase}
+.def-cell{font:500 12px Inter,system-ui;color:var(--ink)}
+.def-sub{font:400 10.5px Inter,system-ui;color:var(--ink-3);margin-top:2px}
+.addlinkbtn{width:100%;margin-top:12px;font:600 12px Inter,system-ui;color:var(--accent);background:transparent;
+  border:1px dashed var(--accent-line);border-radius:10px;padding:11px}
+.addlinkbtn:hover{background:var(--accent-soft)}
+
+/* ═══ BUILDER: 3-zone ═══ */
+.builder{display:grid;grid-template-columns:264px 1fr 340px;height:calc(100vh - 59px);min-height:640px}
+.col{overflow-y:auto;padding:18px}
+.rail{border-right:1px solid var(--line);background:var(--panel)}
+.canvas{background:var(--ground)}
+.inspector{border-left:1px solid var(--line);background:var(--panel)}
+.backlink{background:none;border:none;color:var(--ink-3);font:600 11px Inter,system-ui;padding:0;margin-bottom:12px;display:block}
+.backlink:hover{color:var(--accent)}
+.rail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pres-title{font:700 17px Inter,system-ui;letter-spacing:-.01em}
+.pres-meta{font:500 11px Inter,system-ui;color:var(--ink-3);margin-top:2px}
+.section-label{font:500 italic 12px Georgia,serif;color:var(--ink-3);margin:0 0 8px}
+
+.filmstrip{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.scene-card{position:relative;border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:var(--panel-2);
+  transition:.15s;text-align:left;width:100%;color:inherit}
+.scene-card:hover{border-color:var(--accent-line)}
+.scene-card.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 10px 24px -14px rgba(61,91,245,.6)}
+.scene-idx{font:600 10px/1 var(--mono);color:var(--ink-3)}
+.scene-name{font:600 13px Inter,system-ui;margin-top:5px}
+.scene-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tmpl-pill{font:600 9px Inter,system-ui;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:5px;
+  background:var(--accent-soft);color:var(--accent)}
+.scene-foot{display:flex;align-items:center;gap:8px;margin-top:9px;font:500 10.5px Inter,system-ui;color:var(--ink-3)}
+.dot{width:5px;height:5px;border-radius:50%}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)}
+.addscene{margin-top:11px;width:100%;padding:10px;border:1px dashed var(--line);border-radius:11px;background:transparent;
+  color:var(--ink-2);font:600 12px Inter,system-ui}
+.addscene:hover{border-color:var(--accent-line);color:var(--accent)}
+
+/* canvas center */
+.canvas-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.scene-title-lg{font:700 22px Inter,system-ui;letter-spacing:-.02em}
+.stepline{display:flex;gap:6px;margin-top:4px}
+.step{font:600 10px Inter,system-ui;letter-spacing:.04em;color:var(--ink-3)}
+.step b{color:var(--accent)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card + .card{margin-top:14px}
+.card-h{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.card-h .eyebrow{margin:0}
+.card-num{width:20px;height:20px;border-radius:6px;background:var(--accent-soft);color:var(--accent);
+  font:700 11px var(--mono);display:flex;align-items:center;justify-content:center}
+
+.field-label{font:600 11.5px Inter,system-ui;color:var(--ink-2);margin-bottom:6px;display:block}
+.intent{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+  font:500 13.5px/1.55 Inter,system-ui;padding:12px 14px;resize:vertical;min-height:70px}
+.intent:focus{outline:none;border-color:var(--accent)}
+
+.metricbank{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.metric-chip{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:9px;padding:8px 11px}
+.metric-chip .val{font:700 15px var(--mono);color:var(--accent)}
+.metric-chip .lbl{font:600 10px Inter,system-ui;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.metric-chip .x{color:var(--ink-3);font-size:13px;padding:0 2px}
+.metric-add{border:1px dashed var(--line);background:transparent;color:var(--ink-2);border-radius:9px;
+  padding:8px 12px;font:600 12px Inter,system-ui}
+.metric-add:hover{border-color:var(--accent-line);color:var(--accent)}
+
+.previewframe{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);
+  background:linear-gradient(180deg,#F8FBFF,#E9F1FA);aspect-ratio:16/9}
+.pf-title{position:absolute;top:16px;left:0;right:0;text-align:center}
+.pf-title h4{font:700 15px Inter,system-ui;color:#1E293B;margin:0}
+.pf-title p{font:500 10px Inter,system-ui;color:#64748B;margin:3px 0 0}
+.pf-cue{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);display:flex;gap:22px}
+.pf-node{text-align:center}
+.pf-node .d{width:11px;height:11px;border-radius:50%;background:#3D5BF5;margin:0 auto;box-shadow:0 0 0 4px rgba(61,91,245,.14)}
+.pf-node .d.end{background:#22A06B;box-shadow:0 0 0 4px rgba(34,160,107,.16)}
+.pf-node .t{font:700 9px Inter,system-ui;color:#1E293B;margin-top:7px}
+.pf-node .s{font:500 8px Inter,system-ui;color:#94A3B8}
+.pf-line{position:absolute;top:calc(44% - 6px);left:16%;right:16%;height:2px;background:#DCE4F0}
+.pf-cards{position:absolute;bottom:16%;left:0;right:0;display:flex;justify-content:center;gap:12px}
+.pf-metric{background:#fff;border:1px solid rgba(61,91,245,.5);border-radius:11px;padding:10px 16px;text-align:center;
+  box-shadow:0 14px 30px -16px rgba(61,91,245,.4)}
+.pf-metric .n{font:700 22px Inter,system-ui;color:#3D5BF5;font-variant-numeric:tabular-nums}
+.pf-metric .l{font:600 8px Inter,system-ui;letter-spacing:.08em;color:#3D5BF5}
+.pf-badge{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:5px;background:#fff;
+  border:1px solid rgba(61,91,245,.35);border-radius:999px;padding:4px 9px;font:600 8px Inter,system-ui;color:#3D5BF5;
+  box-shadow:0 8px 20px -10px rgba(30,58,138,.4)}
+.pf-avatar{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:52px;height:64px;
+  background:linear-gradient(180deg,#EFBE93 0 32%,#26334D 32%);border-radius:26px 26px 0 0}
+.regen{position:absolute;bottom:12px;right:12px;display:flex;gap:8px}
+.mini-btn{font:600 11px Inter,system-ui;padding:7px 12px;border-radius:8px;border:1px solid #E2E8F0;
+  background:rgba(255,255,255,.92);color:#3D5BF5}
+
+.headfield{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+.headfield + .headfield{margin-top:9px}
+.headfield .hf-lbl{font:600 9px Inter,system-ui;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.headfield .hf-title{font:700 18px Inter,system-ui;letter-spacing:-.01em;color:var(--ink);margin-top:5px;
+  border:none;background:none;width:100%;padding:0}
+.headfield .hf-sub{font:500 13px Inter,system-ui;color:var(--ink-2);margin-top:5px;border:none;background:none;width:100%;padding:0}
+.headfield input{outline:none}
+.headfield input:focus{color:var(--accent)}
+
+.script-box{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.script-box p{margin:0;font:500 13.5px/1.65 Inter,system-ui;color:var(--ink)}
+.script-meta{display:flex;align-items:center;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.script-meta span{font:500 11px Inter,system-ui;color:var(--ink-3)}
+.pill-ai{display:inline-flex;align-items:center;gap:6px;font:600 10px Inter,system-ui;color:var(--accent);
+  background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:999px;padding:3px 9px}
+.link-btn{background:none;border:none;color:var(--accent);font:600 12px Inter,system-ui;padding:0}
+
+/* inspector */
+.insp-sec{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.insp-sec:last-child{border:none;margin-bottom:0}
+.insp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.insp-h .eyebrow{margin:0}
+.provider{display:flex;flex-direction:column;gap:8px}
+.prov{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;
+  background:var(--panel-2);width:100%;text-align:left;transition:.15s}
+.prov:hover{border-color:var(--accent-line)}
+.prov.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.prov-logo{width:28px;height:28px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;
+  font:700 11px Inter,system-ui;color:#fff}
+.prov-body{flex:1;min-width:0}
+.prov-name{font:600 13px Inter,system-ui}
+.prov-tag{font:500 10.5px Inter,system-ui;color:var(--ink-3);margin-top:1px}
+.prov-cost{text-align:right;flex:none}
+.prov-cost .c{font:700 12px var(--mono);color:var(--ink)}
+.prov-cost .u{font:500 9px Inter,system-ui;color:var(--ink-3)}
+.cost-note{margin-top:10px;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:10px;
+  padding:10px 12px;display:flex;align-items:baseline;justify-content:space-between}
+.cost-note .k{font:600 11px Inter,system-ui;color:var(--ink-2)}
+.cost-note .v{font:700 15px var(--mono);color:var(--accent)}
+.cost-sub{font:500 10px Inter,system-ui;color:var(--ink-3);margin-top:4px}
+
+.tmpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tmpl{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel-2);text-align:center;transition:.15s}
+.tmpl:hover{border-color:var(--accent-line)}
+.tmpl.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tmpl-ico{height:34px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.tmpl-nm{font:600 11px Inter,system-ui;margin-top:4px}
+.tmpl-new{grid-column:span 2;border:1px dashed var(--accent-line);color:var(--accent);background:var(--accent-soft);
+  border-radius:10px;padding:10px;font:600 11.5px Inter,system-ui}
+
+.doc{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;
+  background:var(--panel-2);margin-bottom:7px}
+.doc .ic{width:26px;height:32px;border-radius:4px;background:var(--accent-soft);display:flex;align-items:center;
+  justify-content:center;font-size:13px;flex:none}
+.doc .nm{font:600 11.5px Inter,system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.doc .rag{font:600 8px Inter,system-ui;letter-spacing:.06em;color:var(--ok);background:var(--ok-soft);border-radius:5px;padding:2px 5px;flex:none}
+.doc-add{width:100%;border:1px dashed var(--line);background:transparent;color:var(--ink-2);border-radius:9px;
+  padding:9px;font:600 11.5px Inter,system-ui;margin-top:3px}
+.doc-add:hover{border-color:var(--accent-line);color:var(--accent)}
+
+.genbar{position:sticky;bottom:0;background:linear-gradient(0deg,var(--panel) 70%,transparent);
+  padding:14px 0 2px;margin-top:16px}
+.gen-btn{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(140deg,var(--accent-2),var(--accent));color:#fff;
+  font:700 13px Inter,system-ui;display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 14px 30px -12px rgba(61,91,245,.7)}
+.gen-cost{text-align:center;font:500 10.5px Inter,system-ui;color:var(--ink-3);margin-top:7px}
+
+/* queue */
+.wrap{max-width:1080px;margin:0 auto;padding:32px 28px}
+.page-h{margin-bottom:6px}
+.page-h h2{font-size:24px}
+.page-sub{color:var(--ink-2);font:400 14px Inter,system-ui;margin:6px 0 26px;max-width:620px}
+.queue-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.qcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.qcard.pending{border-color:var(--warn-soft)}
+.q-prev{aspect-ratio:16/9;background:linear-gradient(180deg,#F8FBFF,#E9F1FA);position:relative;
+  display:flex;align-items:center;justify-content:center}
+.q-body{padding:15px 16px}
+.q-top{display:flex;align-items:center;justify-content:space-between}
+.q-name{font:600 14px Inter,system-ui}
+.status{font:600 9.5px Inter,system-ui;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
+.status.pending{color:var(--warn);background:var(--warn-soft)}
+.status.approved{color:var(--ok);background:var(--ok-soft)}
+.q-meta{font:500 11.5px Inter,system-ui;color:var(--ink-3);margin-top:5px}
+.q-src{margin-top:8px;font:500 11px Inter,system-ui;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line);
+  border-radius:8px;padding:8px 10px}
+.q-src b{color:var(--ink)}
+.q-actions{display:flex;gap:8px;margin-top:13px}
+.btn{flex:1;padding:9px;border-radius:9px;font:600 12px Inter,system-ui;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)}
+.btn.approve{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.reject{background:transparent;border-color:var(--bad-soft);color:var(--bad)}
+.btn.ghost{background:transparent}
+
+.demo-flow{display:flex;gap:14px}
+.demo-node{width:9px;height:9px;border-radius:50%;background:#3D5BF5;animation:pulse 2s ease-in-out infinite}
+.demo-node:nth-child(2){animation-delay:.4s}.demo-node:nth-child(3){animation-delay:.8s}
+.demo-node:nth-child(4){animation-delay:1.2s;background:#22A06B}
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(61,91,245,.4)}50%{transform:scale(1.25);box-shadow:0 0 0 6px rgba(61,91,245,0)}}
+.demo-gauge{width:70px;height:70px;border-radius:50%;border:6px solid #DCE4F0;border-top-color:#3D5BF5;animation:spin 3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.demo-bars{display:flex;align-items:flex-end;gap:6px;height:60px}
+.demo-bars i{width:12px;background:#3D5BF5;border-radius:3px;animation:grow 1.8s ease-in-out infinite alternate}
+.demo-bars i:nth-child(2){animation-delay:.3s;height:70%}.demo-bars i:nth-child(1){height:45%}
+.demo-bars i:nth-child(3){animation-delay:.6s;height:90%}.demo-bars i:nth-child(4){animation-delay:.9s;height:60%}
+@keyframes grow{from{transform:scaleY(.6)}to{transform:scaleY(1)}}
+
+/* knowledge */
+.klayout{display:grid;grid-template-columns:1fr 380px;gap:22px}
+.ksource{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.ksrc-row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line)}
+.ksrc-row:last-child{border:none}
+.ksrc-ic{width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.ksrc-main{flex:1;min-width:0}
+.ksrc-nm{font:600 13.5px Inter,system-ui}
+.ksrc-meta{font:500 11px Inter,system-ui;color:var(--ink-3);margin-top:2px}
+.ksrc-state{display:flex;align-items:center;gap:6px;font:600 10.5px Inter,system-ui}
+.ksrc-state.indexed{color:var(--ok)}
+.ksrc-state.processing{color:var(--warn)}
+.progress{width:70px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--warn);width:64%}
+.textarea-big{width:100%;min-height:130px;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;
+  color:var(--ink);font:500 13px/1.6 Inter,system-ui;padding:14px;resize:vertical}
+.textarea-big:focus{outline:none;border-color:var(--accent)}
+.kside .card{background:var(--panel)}
+.qtest{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font:500 13px Inter,system-ui;color:var(--ink)}
+.answer{margin-top:12px;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:11px;padding:14px}
+.answer p{margin:0;font:500 13px/1.6 Inter,system-ui;color:var(--ink)}
+.cite{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font:600 10px Inter,system-ui;color:var(--accent);
+  background:var(--panel);border:1px solid var(--accent-line);border-radius:6px;padding:3px 8px}
+.k-stat{display:flex;gap:20px;margin-top:14px}
+.k-stat div .n{font:700 20px var(--mono);color:var(--ink)}
+.k-stat div .l{font:500 10.5px Inter,system-ui;color:var(--ink-3)}
+
+.note{max-width:1080px;margin:14px auto 40px;padding:0 28px;color:var(--ink-3);font:500 12px/1.6 Inter,system-ui}
+.hint{font:500 11px Inter,system-ui;color:var(--ink-3);margin-top:5px}
+@media (max-width:1180px){.builder{grid-template-columns:220px 1fr 300px}.pwrap{flex-direction:column}.createpanel{width:100%}}
+@media (max-width:980px){.builder{grid-template-columns:1fr;height:auto}.rail,.inspector{border:none;border-bottom:1px solid var(--line)}
+  .queue-grid,.klayout{grid-template-columns:1fr}.prow{grid-template-columns:2fr 1fr;row-gap:8px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<div class="top">
+  <div class="brand">
+    <span class="cma">CMA</span>
+    <div><div class="name">CREDIBLE</div><div class="sub">MEDICAL ASSISTANCE</div></div>
+  </div>
+  <div class="divider"></div>
+  <span class="studio">Pitch Studio</span>
+  <div class="tabs">
+    <button class="tab on" id="tab-pres" onclick="show('pres',this)">Presentations</button>
+    <button class="tab" id="tab-builder" onclick="show('builder',this)">Scene Builder</button>
+    <button class="tab" id="tab-queue" onclick="show('queue',this)">Template Queue <span style="color:var(--warn)">•2</span></button>
+    <button class="tab" id="tab-knowledge" onclick="show('knowledge',this)">Knowledge &amp; Q&amp;A</button>
+  </div>
+  <div class="top-right">
+    <span class="chip-quiet" id="ctx-chip">All presentations</span>
+    <button class="themebtn" onclick="toggleTheme()" title="Toggle theme">◑</button>
+    <div class="avatar-dot">RS</div>
+  </div>
+</div>
+
+<!-- ════════════════ PRESENTATIONS (multi) ════════════════ -->
+<section class="screen on" id="pres">
+<div class="pwrap">
+
+  <div class="pmain">
+    <div class="phead">
+      <div>
+        <h2>Presentations</h2>
+        <div class="sub">Each link is a personalised, avatar-led pitch — the link itself carries the recipient and language, and the matching HeyGen presenter model delivers it.</div>
+      </div>
+      <button class="btn-primary" onclick="openCreate()">+ New presentation</button>
+    </div>
+
+    <div class="pstats">
+      <div class="pstat"><div class="l">PRESENTATIONS</div><div class="n">4</div></div>
+      <div class="pstat"><div class="l">SHARE LINKS</div><div class="n">8</div></div>
+      <div class="pstat"><div class="l">TOTAL VIEWS</div><div class="n">45</div></div>
+      <div class="pstat"><div class="l">LANGUAGES</div><div class="n">3</div></div>
+    </div>
+
+    <div class="ptablewrap">
+      <div class="prow hd" style="grid-template-columns:2fr 1.5fr .8fr 1.1fr .8fr 1.6fr">
+        <div>PRESENTATION</div><div>DEFAULTS</div><div>LINKS</div><div>ENGAGEMENT</div><div>STATUS</div><div>ACTIONS</div>
+      </div>
+
+      <div class="prow" style="grid-template-columns:2fr 1.5fr .8fr 1.1fr .8fr 1.6fr">
+        <div style="min-width:0"><button class="pname" id="name-meridian" onclick="manageLinks('meridian')">Meridian Insurance Group</button><div class="pfor" id="deck-meridian">Global Overview (7 scenes)</div></div>
+        <div style="min-width:0"><div class="def-cell"><span class="langchip" id="defchip-meridian">EN</span> <span id="defname-meridian">Sadique</span></div><div class="def-sub">new links inherit these</div></div>
+        <div><div class="pviews" id="linkcount-meridian">3 links</div></div>
+        <div><div class="pviews">17 views</div><div class="popened">last opened 2h ago</div></div>
+        <div><span class="stpill live">LIVE</span></div>
+        <div style="display:flex;gap:7px"><button class="actbtn primary" onclick="manageLinks('meridian')">Share links</button><button class="actbtn" onclick="openPres('meridian')">Edit scenes</button></div>
+      </div>
+
+      <div class="prow" style="grid-template-columns:2fr 1.5fr .8fr 1.1fr .8fr 1.6fr">
+        <div style="min-width:0"><button class="pname" id="name-gulf" onclick="manageLinks('gulf')">Gulf Takaful Insurance</button><div class="pfor" id="deck-gulf">Global Overview (7 scenes)</div></div>
+        <div style="min-width:0"><div class="def-cell"><span class="langchip" id="defchip-gulf">AR</span> <span id="defname-gulf">Sadique</span></div><div class="def-sub">new links inherit these</div></div>
+        <div><div class="pviews" id="linkcount-gulf">2 links</div></div>
+        <div><div class="pviews">6 views</div><div class="popened">last opened yesterday</div></div>
+        <div><span class="stpill live">LIVE</span></div>
+        <div style="display:flex;gap:7px"><button class="actbtn primary" onclick="manageLinks('gulf')">Share links</button><button class="actbtn" onclick="openPres('gulf')">Edit scenes</button></div>
+      </div>
+
+      <div class="prow" style="grid-template-columns:2fr 1.5fr .8fr 1.1fr .8fr 1.6fr">
+        <div style="min-width:0"><button class="pname" id="name-axa" onclick="manageLinks('axa')">AXA Partners France</button><div class="pfor" id="deck-axa">60-second short</div></div>
+        <div style="min-width:0"><div class="def-cell"><span class="langchip" id="defchip-axa">FR</span> <span id="defname-axa">Riya</span></div><div class="def-sub">new links inherit these</div></div>
+        <div><div class="pviews" id="linkcount-axa">1 link</div></div>
+        <div><div class="pviews">—</div><div class="popened">not opened yet</div></div>
+        <div><span class="stpill draft">DRAFT</span></div>
+        <div style="display:flex;gap:7px"><button class="actbtn primary" onclick="manageLinks('axa')">Share links</button><button class="actbtn" onclick="openPres('axa')">Edit scenes</button></div>
+      </div>
+
+      <div class="prow" style="grid-template-columns:2fr 1.5fr .8fr 1.1fr .8fr 1.6fr">
+        <div style="min-width:0"><button class="pname" id="name-tokio" onclick="manageLinks('tokio')">Tokio Marine Asia</button><div class="pfor" id="deck-tokio">Claims-team deep dive</div></div>
+        <div style="min-width:0"><div class="def-cell"><span class="langchip" id="defchip-tokio">EN</span> <span id="defname-tokio">Sadique</span></div><div class="def-sub">new links inherit these</div></div>
+        <div><div class="pviews" id="linkcount-tokio">2 links</div></div>
+        <div><div class="pviews">22 views</div><div class="popened">last opened 3d ago</div></div>
+        <div><span class="stpill live">LIVE</span></div>
+        <div style="display:flex;gap:7px"><button class="actbtn primary" onclick="manageLinks('tokio')">Share links</button><button class="actbtn" onclick="openPres('tokio')">Edit scenes</button></div>
+      </div>
+    </div>
+
+    <div class="pfoot">One presentation, many links: each share link is unique per recipient (<code>/p/meridian-en-4f7q?to=David</code>) so views are tracked per person. A link inherits the presentation&rsquo;s default language and presenter, and can override both — send the same deck to the CEO in English with Sadique and to the regional team in Arabic with Riya. <b>Share links</b> manages a presentation&rsquo;s links; <b>Edit scenes</b> opens its content in the Scene Builder.</div>
+  </div>
+
+  <!-- right panel: create OR manage links -->
+  <div class="createpanel" id="createpanel">
+
+    <!-- MODE A: new presentation -->
+    <div id="mode-new">
+      <div class="ph">
+        <div>
+          <h3>New presentation</h3>
+          <div class="psub">Name the prospect and set defaults — you add share links right after.</div>
+        </div>
+      </div>
+
+      <div class="frow">
+        <label class="lbl" for="f-company">Prospect company</label>
+        <input class="fld" id="f-company" value="Meridian Insurance Group" oninput="resetCreate()">
+      </div>
+      <div class="frow">
+        <label class="lbl" for="f-script">Base deck</label>
+        <select class="fld" id="f-script">
+          <option>Global Overview (7 scenes)</option>
+          <option>60-second short</option>
+          <option>Claims-team deep dive</option>
+        </select>
+      </div>
+      <div class="frow2">
+        <div>
+          <label class="lbl" for="f-lang">Default language</label>
+          <select class="fld" id="f-lang" onchange="resetCreate()">
+            <option value="en">English</option>
+            <option value="ar">Arabic — العربية</option>
+            <option value="fr">French — Français</option>
+            <option value="de">German — Deutsch</option>
+            <option value="es">Spanish — Español</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl" for="f-avatar">Default presenter</label>
+          <select class="fld" id="f-avatar" onchange="resetCreate()">
+            <option value="sadique">Sadique — founder</option>
+            <option value="riya">Riya — ops lead</option>
+            <option value="arjun">Dr. Arjun — medical director</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Every share link starts from these defaults — each link can override language, presenter and recipient.</div>
+
+      <button class="createbtn" id="create-btn" onclick="createPres()">Create presentation</button>
+    </div>
+
+    <!-- MODE B: one presentation — settings + share links -->
+    <div id="mode-links" style="display:none">
+      <div class="ph">
+        <div>
+          <h3 id="ml-title">Meridian Insurance Group</h3>
+          <div class="psub">Presentation settings &amp; share links</div>
+        </div>
+        <button class="closebtn" onclick="backToNew()" aria-label="Back">×</button>
+      </div>
+
+      <div class="frow">
+        <label class="lbl" for="ml-name">Prospect / presentation name</label>
+        <input class="fld" id="ml-name" oninput="settingsChanged()">
+      </div>
+      <div class="frow">
+        <label class="lbl" for="ml-deck">Base deck</label>
+        <select class="fld" id="ml-deck" onchange="settingsChanged()">
+          <option>Global Overview (7 scenes)</option>
+          <option>60-second short</option>
+          <option>Claims-team deep dive</option>
+        </select>
+      </div>
+      <div class="frow2">
+        <div>
+          <label class="lbl" for="ml-lang">Default language</label>
+          <select class="fld" id="ml-lang" onchange="defaultsChanged()">
+            <option value="en">English</option>
+            <option value="ar">Arabic</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="es">Spanish</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl" for="ml-avatar">Default presenter</label>
+          <select class="fld" id="ml-avatar" onchange="defaultsChanged()">
+            <option value="sadique">Sadique</option>
+            <option value="riya">Riya</option>
+            <option value="arjun">Dr. Arjun</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Links set to “default” follow these instantly — overridden links keep their own choice.</div>
+
+      <div class="sep">
+        <label class="lbl">Default link — no personalisation</label>
+        <div class="linkcell">
+          <div class="linkbox" id="ml-deflink">credibleassist.com/p/meridian-en</div>
+          <button class="copybtn" onclick="copyLink(this,'https://'+document.getElementById('ml-deflink').textContent)">Copy</button>
+        </div>
+        <div class="hint">The generic link for this presentation — uses the defaults above, greets no one by name. Copy and send as-is when you don&rsquo;t need personalisation.</div>
+      </div>
+
+      <div class="sep">
+        <label class="lbl">Share links — one per recipient</label>
+        <div id="linklist" style="margin-top:10px"></div>
+        <button class="addlinkbtn" onclick="addLink()">+ New share link for this presentation</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</section>
+
+<!-- ════════════════ SCENE BUILDER ════════════════ -->
+<section class="screen" id="builder">
+<div class="builder">
+
+  <!-- LEFT RAIL -->
+  <div class="col rail">
+    <button class="backlink" onclick="show('pres',document.getElementById('tab-pres'))">← All presentations</button>
+    <div class="rail-head">
+      <div>
+        <div class="pres-title" id="rail-title">Meridian Insurance Group</div>
+        <div class="pres-meta" id="rail-meta">7 scenes · draft · v3 · EN</div>
+      </div>
+    </div>
+    <button class="actbtn primary" style="width:100%;margin-bottom:14px" onclick="openSettings()">⚙ Presentation settings &amp; share links</button>
+    <div class="section-label">Scenes play in order →</div>
+    <div class="filmstrip">
+      <button class="scene-card" onclick="pick(this)"><div class="scene-idx">01</div><div class="scene-name">Who we are</div><div class="scene-tags"><span class="tmpl-pill">Pillars</span></div><div class="scene-foot"><span class="dot ok"></span>script ready · 2 docs</div></button>
+      <button class="scene-card active" onclick="pick(this)"><div class="scene-idx">02</div><div class="scene-name">Every case is a person</div><div class="scene-tags"><span class="tmpl-pill">Flow</span></div><div class="scene-foot"><span class="dot ok"></span>script ready · 2 docs</div></button>
+      <button class="scene-card" onclick="pick(this)"><div class="scene-idx">03</div><div class="scene-name">Wherever members go</div><div class="scene-tags"><span class="tmpl-pill">Map</span></div><div class="scene-foot"><span class="dot ok"></span>script ready · 2 docs</div></button>
+      <button class="scene-card" onclick="pick(this)"><div class="scene-idx">04</div><div class="scene-name">When minutes matter</div><div class="scene-tags"><span class="tmpl-pill">Document</span></div><div class="scene-foot"><span class="dot warn"></span>needs review · 2 docs</div></button>
+      <button class="scene-card" onclick="pick(this)"><div class="scene-idx">05</div><div class="scene-name">Speed alone isn't care</div><div class="scene-tags"><span class="tmpl-pill">Rating</span></div><div class="scene-foot"><span class="dot ok"></span>script ready · 2 docs</div></button>
+      <button class="scene-card" onclick="pick(this)"><div class="scene-idx">06</div><div class="scene-name">No surprises billing</div><div class="scene-tags"><span class="tmpl-pill">Checklist</span></div><div class="scene-foot"><span class="dot ok"></span>script ready · 1 doc</div></button>
+      <button class="scene-card" onclick="pick(this)"><div class="scene-idx">07</div><div class="scene-name">This is the job</div><div class="scene-tags"><span class="tmpl-pill">Route</span></div><div class="scene-foot"><span class="dot ok"></span>script ready · 3 docs</div></button>
+    </div>
+    <button class="addscene">+ Add scene</button>
+  </div>
+
+  <!-- CENTER CANVAS -->
+  <div class="col canvas">
+    <div class="canvas-head">
+      <div>
+        <div class="scene-title-lg">Scene 02 — Every case is a person</div>
+        <div class="stepline"><span class="step"><b>Intent</b></span><span class="step">→ Data</span><span class="step">→ Generate</span><span class="step">→ Review</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="card-num">1</span><span class="eyebrow">What should this scene land?</span></div>
+      <label class="field-label">Motive — tell it in plain words what you're trying to prove</label>
+      <textarea class="intent">Show scale AND that every number is a real person we saw through. Emphasise one case manager owns each case end-to-end. Warm, human — not a boast.</textarea>
+      <div class="hint">This drives the script tone and which template the system suggests.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="card-num">2</span><span class="eyebrow">Generated frame — live preview</span></div>
+      <div class="previewframe">
+        <div class="pf-badge">📄 2 documents — backed by evidence</div>
+        <div class="pf-title"><h4>Every case is a real person</h4><p>One case manager owns each case, first call to resolution</p></div>
+        <div class="pf-line"></div>
+        <div class="pf-cue">
+          <div class="pf-node"><div class="d"></div><div class="t">First call</div><div class="s">member reaches us</div></div>
+          <div class="pf-node"><div class="d"></div><div class="t">Case manager</div><div class="s">one owner</div></div>
+          <div class="pf-node"><div class="d"></div><div class="t">Treatment</div><div class="s">OPD · IPD · tele</div></div>
+          <div class="pf-node"><div class="d end"></div><div class="t">Resolved</div><div class="s">closed &amp; reported</div></div>
+        </div>
+        <div class="pf-cards">
+          <div class="pf-metric"><div class="n">140,000+</div><div class="l">CASES HANDLED</div></div>
+          <div class="pf-metric"><div class="n">96%</div><div class="l">COMPLETED</div></div>
+        </div>
+        <div class="pf-avatar"></div>
+        <div class="regen"><button class="mini-btn">↻ Regenerate visual</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="card-num">3</span><span class="eyebrow">Scene heading — generated, editable</span></div>
+      <div class="headfield">
+        <div class="hf-lbl">Title (shown at top of the frame)</div>
+        <input class="hf-title" value="Every case is a real person">
+      </div>
+      <div class="headfield">
+        <div class="hf-lbl">Description / subtitle</div>
+        <input class="hf-sub" value="One case manager owns each case, first call to resolution">
+      </div>
+      <div class="script-meta" style="border:none;margin-top:11px;padding:0">
+        <span class="pill-ai">✦ Claude Opus 4.8</span>
+        <span>drawn from your intent</span>
+        <button class="link-btn" style="margin-left:auto">Regenerate</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="card-num">4</span><span class="eyebrow">Orator script — generated, editable</span></div>
+      <div class="script-box">
+        <p>Every one of these is a real person we helped. Over one hundred and forty thousand cases so far — ninety-six percent seen all the way through, the rest still in our hands today. Outpatient, inpatient, house-calls, telemedicine. One case manager owns each case, first call to resolution. It's all in our records.</p>
+        <div class="script-meta">
+          <span class="pill-ai">✦ Claude Opus 4.8</span>
+          <span>~14s spoken</span>
+          <span>108 words</span>
+          <button class="link-btn" style="margin-left:auto">Edit</button>
+          <button class="link-btn">Regenerate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT INSPECTOR -->
+  <div class="col inspector">
+
+    <div class="insp-sec">
+      <div class="insp-h"><span class="eyebrow">Numbers in this scene</span></div>
+      <div class="metricbank">
+        <div class="metric-chip"><span class="val">140,000+</span><span class="lbl">Cases</span><span class="x">×</span></div>
+        <div class="metric-chip"><span class="val">96%</span><span class="lbl">Completed</span><span class="x">×</span></div>
+        <button class="metric-add">+ metric</button>
+      </div>
+      <div class="hint">Pulled from your metric library — formatting stays consistent everywhere.</div>
+    </div>
+
+    <div class="insp-sec">
+      <div class="insp-h"><span class="eyebrow">Visual template</span></div>
+      <div class="tmpl-grid">
+        <div class="tmpl sel"><div class="tmpl-ico"><svg width="40" height="20"><circle cx="6" cy="10" r="4" fill="currentColor"/><circle cx="20" cy="10" r="4" fill="currentColor"/><circle cx="34" cy="10" r="4" fill="currentColor"/><line x1="6" y1="10" x2="34" y2="10" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="tmpl-nm">Flow ✓</div></div>
+        <div class="tmpl"><div class="tmpl-ico"><svg width="30" height="24"><circle cx="8" cy="8" r="2.5" fill="currentColor"/><circle cx="22" cy="6" r="2.5" fill="currentColor"/><circle cx="15" cy="18" r="2.5" fill="currentColor"/></svg></div><div class="tmpl-nm">Map</div></div>
+        <div class="tmpl"><div class="tmpl-ico">★★★</div><div class="tmpl-nm">Rating</div></div>
+        <div class="tmpl"><div class="tmpl-ico"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></div><div class="tmpl-nm">Document</div></div>
+        <button class="tmpl-new">✦ Need something else? Generate a new template →</button>
+      </div>
+      <div class="hint">A generated template goes to the approval queue before it can ship.</div>
+    </div>
+
+    <div class="insp-sec">
+      <div class="insp-h"><span class="eyebrow">Supporting documents</span></div>
+      <div class="doc"><div class="ic">📄</div><div class="nm">Case Volume Report 2025.pdf</div><span class="rag">RAG</span></div>
+      <div class="doc"><div class="ic">📄</div><div class="nm">Year-on-Year Growth Chart.pdf</div><span class="rag">RAG</span></div>
+      <button class="doc-add">+ Attach document</button>
+      <div class="hint">Attached docs show as evidence <em>and</em> feed the Q&amp;A knowledge base.</div>
+    </div>
+
+    <div class="insp-sec">
+      <div class="insp-h"><span class="eyebrow">AI model for generation</span></div>
+      <div class="provider">
+        <button class="prov sel"><span class="prov-logo" style="background:#3D5BF5">✦</span><div class="prov-body"><div class="prov-name">Claude Opus 4.8</div><div class="prov-tag">Best writing · recommended</div></div><div class="prov-cost"><div class="c">$0.06</div><div class="u">/ scene</div></div></button>
+        <button class="prov"><span class="prov-logo" style="background:#10A37F">◆</span><div class="prov-body"><div class="prov-name">GPT-5</div><div class="prov-tag">Fast, capable</div></div><div class="prov-cost"><div class="c">$0.04</div><div class="u">/ scene</div></div></button>
+        <button class="prov"><span class="prov-logo" style="background:#4285F4">◇</span><div class="prov-body"><div class="prov-name">Gemini 2.5 Pro</div><div class="prov-tag">Cheapest</div></div><div class="prov-cost"><div class="c">$0.02</div><div class="u">/ scene</div></div></button>
+      </div>
+      <div class="cost-note"><span class="k">Est. this generation</span><span class="v">$0.06</span></div>
+      <div class="cost-sub">script (~1.2k tok) + visual match. Whole 7-scene deck ≈ $0.42.</div>
+    </div>
+
+    <div class="genbar">
+      <button class="gen-btn">✦ Generate heading, script &amp; visual</button>
+      <div class="gen-cost">Runs the selected model · ~$0.06 · ~4s</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════════════ TEMPLATE QUEUE ════════════════ -->
+<section class="screen" id="queue">
+<div class="wrap">
+  <div class="page-h"><span class="eyebrow">Governance</span><h2>Template approval queue</h2></div>
+  <p class="page-sub">When a scene needs a visual no existing template covers, the model proposes a new one. Nothing generated reaches a client deck until you approve it here — approved templates join the reusable library.</p>
+
+  <div class="queue-grid">
+    <div class="qcard pending">
+      <div class="q-prev"><div class="demo-gauge"></div></div>
+      <div class="q-body">
+        <div class="q-top"><span class="q-name">Radial SLA gauge</span><span class="status pending">Pending review</span></div>
+        <div class="q-meta">Generated by Claude Opus 4.8 · for Scene 04 “When minutes matter”</div>
+        <div class="q-src"><b>Requested because:</b> no existing template showed a single percentage filling toward a target.</div>
+        <div class="q-actions"><button class="btn approve">Approve &amp; add to library</button><button class="btn reject">Reject</button><button class="btn ghost">Preview</button></div>
+      </div>
+    </div>
+
+    <div class="qcard pending">
+      <div class="q-prev"><div class="demo-bars"><i></i><i></i><i></i><i></i></div></div>
+      <div class="q-body">
+        <div class="q-top"><span class="q-name">Year-on-year growth bars</span><span class="status pending">Pending review</span></div>
+        <div class="q-meta">Generated by GPT-5 · for Scene 02 “Every case is a person”</div>
+        <div class="q-src"><b>Requested because:</b> intent mentioned “number keeps climbing year after year”.</div>
+        <div class="q-actions"><button class="btn approve">Approve &amp; add to library</button><button class="btn reject">Reject</button><button class="btn ghost">Preview</button></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="q-prev"><div class="demo-flow"><div class="demo-node"></div><div class="demo-node"></div><div class="demo-node"></div><div class="demo-node"></div></div></div>
+      <div class="q-body">
+        <div class="q-top"><span class="q-name">Case journey flow</span><span class="status approved">In library</span></div>
+        <div class="q-meta">Approved by you · used in 3 scenes</div>
+        <div class="q-src"><b>Reusable:</b> any “process / stages / journey” intent maps here automatically.</div>
+        <div class="q-actions"><button class="btn ghost">Edit template</button><button class="btn ghost">Retire</button></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="q-prev"><svg width="120" height="70"><circle cx="30" cy="26" r="4" fill="#3D5BF5"/><circle cx="70" cy="18" r="4" fill="#3D5BF5"/><circle cx="90" cy="44" r="4" fill="#3D5BF5"/><circle cx="48" cy="50" r="3" fill="#3D5BF5"/></svg></div>
+      <div class="q-body">
+        <div class="q-top"><span class="q-name">Pinging world map</span><span class="status approved">In library</span></div>
+        <div class="q-meta">Approved by you · used in 2 scenes</div>
+        <div class="q-src"><b>Reusable:</b> “reach / coverage / countries” intents map here.</div>
+        <div class="q-actions"><button class="btn ghost">Edit template</button><button class="btn ghost">Retire</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════════════ KNOWLEDGE / RAG ════════════════ -->
+<section class="screen" id="knowledge">
+<div class="wrap">
+  <div class="page-h"><span class="eyebrow">Live Q&amp;A</span><h2>Knowledge base</h2></div>
+  <p class="page-sub">When the insurance company interrupts to ask a question, the avatar answers from this knowledge base — not the scripts. Add documents and facts here; we index them so answers are precise and cited.</p>
+
+  <div class="klayout">
+    <div>
+      <div class="ksource">
+        <div class="insp-h"><span class="eyebrow">Indexed sources</span><button class="link-btn">+ Add source</button></div>
+        <div class="ksrc-row"><div class="ksrc-ic">📄</div><div class="ksrc-main"><div class="ksrc-nm">Hospital Network Master List.pdf</div><div class="ksrc-meta">2,140 chunks · added by you</div></div><div class="ksrc-state indexed">● Indexed</div></div>
+        <div class="ksrc-row"><div class="ksrc-ic">📄</div><div class="ksrc-main"><div class="ksrc-nm">SLA Compliance Report (12mo).pdf</div><div class="ksrc-meta">86 chunks · shared with Scene 04</div></div><div class="ksrc-state indexed">● Indexed</div></div>
+        <div class="ksrc-row"><div class="ksrc-ic">📄</div><div class="ksrc-main"><div class="ksrc-nm">Regional Operations — MENA.docx</div><div class="ksrc-meta">indexing… 64%</div></div><div class="ksrc-state processing"><span class="progress"><i></i></span>Processing</div></div>
+      </div>
+
+      <div class="ksource" style="margin-top:16px">
+        <div class="insp-h"><span class="eyebrow">Or just type facts (the RAG filler)</span></div>
+        <textarea class="textarea-big" placeholder="Paste or type anything the avatar should know…">In the Middle East we run dedicated desks in the UAE, Egypt and Türkiye — same alarm centre, same reporting stack, native Arabic coordination. Regional SLA compliance is tracking at 98% over the last twelve months. Weekend GOP turnaround is unchanged from weekdays.</textarea>
+        <div class="k-stat">
+          <div><div class="n">2,290</div><div class="l">total chunks</div></div>
+          <div><div class="n">4</div><div class="l">sources</div></div>
+          <div><div class="n">98.4%</div><div class="l">retrieval hit rate</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kside">
+      <div class="card">
+        <div class="insp-h"><span class="eyebrow">Test a question</span></div>
+        <div class="qtest">“What’s your SLA in the Middle East?”</div>
+        <div class="answer">
+          <p>In the Middle East we run dedicated desks in the UAE, Egypt and Türkiye, with native Arabic coordination on the same alarm centre. Regional SLA compliance is tracking at 98% over the last twelve months.</p>
+          <span class="cite">📄 Regional Operations — MENA · typed fact</span>
+        </div>
+        <div class="hint" style="margin-top:14px">The avatar pauses the pitch, answers from retrieved context, then resumes — never improvising beyond what's indexed.</div>
+      </div>
+
+      <div class="card">
+        <div class="insp-h"><span class="eyebrow">Fallback when nothing matches</span></div>
+        <div class="script-box"><p style="font-size:12.5px">“That's the kind of question I'd take on a live call — let me connect you with our team.”</p></div>
+        <div class="hint" style="margin-top:9px">Editable. Prevents the avatar from inventing answers.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<p class="note"><b>This is a static design mockup</b> — nothing here is wired up to a backend, but the Presentations screen is interactive. The model: each <b>presentation</b> holds the deck plus a <b>default language and default presenter</b>; each presentation then has <b>many share links</b>, one per recipient, each with its own unique code (<code>/p/meridian-en-4f7q?to=David</code>) so views are tracked per person. A link inherits the presentation defaults and can <b>override</b> language, presenter, and recipient — click <b>Share links</b> on any row, then Edit a link, change its language and watch the URL and override chips update; Revoke/Re-enable, add new links, or change the defaults and see default-following links switch instantly. The other screens are unchanged: Scene Builder (intent → generated script &amp; visual, with AI-model cost picker), Template Queue (approve generated visuals into the library), and the Knowledge base powering cited live Q&amp;A.</p>
+
+<script>
+function show(id, el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  if(id==='pres'){document.getElementById('ctx-chip').textContent='All presentations';}
+  window.scrollTo(0,0);
+}
+function pick(el){
+  document.querySelectorAll('.scene-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleTheme(){
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : cur==='light' ? 'dark' : (matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark');
+  r.setAttribute('data-theme',next);
+}
+
+/* ── presentations ── */
+let builderKey='meridian';
+function openPres(key){
+  builderKey=key;
+  const p=PRES[key];
+  document.getElementById('rail-title').textContent=p.name;
+  document.getElementById('rail-meta').textContent=p.meta+' · '+LANGCODE[p.defaults.lang];
+  document.getElementById('ctx-chip').textContent=p.name;
+  show('builder', document.getElementById('tab-builder'));
+}
+function openSettings(){
+  show('pres', document.getElementById('tab-pres'));
+  manageLinks(builderKey);
+}
+
+const LANGS={en:'English',ar:'Arabic',fr:'French',de:'German',es:'Spanish'};
+const LANGCODE={en:'EN',ar:'AR',fr:'FR',de:'DE',es:'ES'};
+const AVATARS={sadique:'Sadique',riya:'Riya',arjun:'Dr. Arjun'};
+
+/* one presentation → defaults + many share links (null lang/avatar = follow defaults) */
+const PRES={
+  meridian:{name:'Meridian Insurance Group',slug:'meridian',deck:'Global Overview (7 scenes)',meta:'7 scenes · draft · v3',defaults:{lang:'en',avatar:'sadique'},links:[
+    {id:'m1',to:'David Chen',lang:null,avatar:null,code:'4f7q',views:'14 views',opened:'last opened 2h ago',state:'live'},
+    {id:'m2',to:'Sarah Lim',lang:null,avatar:null,code:'9k2d',views:'3 views',opened:'last opened yesterday',state:'live'},
+    {id:'m3',to:'Claims team screen',lang:null,avatar:'riya',code:'x1p8',views:'—',opened:'not opened yet',state:'draft'}
+  ]},
+  gulf:{name:'Gulf Takaful Insurance',slug:'gulf-takaful',deck:'Global Overview (7 scenes)',meta:'7 scenes · translated · v1',defaults:{lang:'ar',avatar:'sadique'},links:[
+    {id:'g1',to:'Fatima Al-Rashid',lang:null,avatar:null,code:'7h3m',views:'6 views',opened:'last opened yesterday',state:'live'},
+    {id:'g2',to:'Omar Haddad',lang:'en',avatar:null,code:'2r9s',views:'—',opened:'not opened yet',state:'live'}
+  ]},
+  axa:{name:'AXA Partners France',slug:'axa-partners',deck:'60-second short',meta:'6 scenes · draft · v1',defaults:{lang:'fr',avatar:'riya'},links:[
+    {id:'a1',to:'Claire Dubois',lang:null,avatar:null,code:'5t6w',views:'—',opened:'not opened yet',state:'draft'}
+  ]},
+  tokio:{name:'Tokio Marine Asia',slug:'tokio-marine',deck:'Claims-team deep dive',meta:'7 scenes · live · v2',defaults:{lang:'en',avatar:'sadique'},links:[
+    {id:'t1',to:'Kenji Watanabe',lang:null,avatar:null,code:'8b4n',views:'19 views',opened:'last opened 3d ago',state:'live'},
+    {id:'t2',to:'Yuki Tanaka',lang:null,avatar:'arjun',code:'6c2v',views:'3 views',opened:'last opened 1w ago',state:'live'}
+  ]}
+};
+let currentPres=null;
+
+function linkUrl(p,l){
+  const lang=l.lang||p.defaults.lang;
+  const first=(l.to||'').trim().split(' ')[0];
+  return 'credibleassist.com/p/'+p.slug+'-'+lang+'-'+l.code+(first?'?to='+encodeURIComponent(first):'');
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function manageLinks(key){
+  currentPres=key;
+  const p=PRES[key];
+  document.getElementById('mode-new').style.display='none';
+  document.getElementById('mode-links').style.display='block';
+  document.getElementById('ml-title').textContent=p.name;
+  document.getElementById('ml-name').value=p.name;
+  document.getElementById('ml-deck').value=p.deck;
+  document.getElementById('ml-lang').value=p.defaults.lang;
+  document.getElementById('ml-avatar').value=p.defaults.avatar;
+  document.getElementById('ctx-chip').textContent=p.name;
+  updateDefaultLink();
+  renderLinks();
+}
+function updateDefaultLink(){
+  const p=PRES[currentPres];
+  document.getElementById('ml-deflink').textContent='credibleassist.com/p/'+p.slug+'-'+p.defaults.lang;
+}
+function settingsChanged(){
+  if(!currentPres)return;
+  const p=PRES[currentPres];
+  p.name=document.getElementById('ml-name').value||p.name;
+  p.deck=document.getElementById('ml-deck').value;
+  document.getElementById('ml-title').textContent=p.name;
+  document.getElementById('ctx-chip').textContent=p.name;
+  const nameEl=document.getElementById('name-'+currentPres);
+  const deckEl=document.getElementById('deck-'+currentPres);
+  if(nameEl)nameEl.textContent=p.name;
+  if(deckEl)deckEl.textContent=p.deck;
+}
+function backToNew(){
+  document.getElementById('mode-links').style.display='none';
+  document.getElementById('mode-new').style.display='block';
+  document.getElementById('ctx-chip').textContent='All presentations';
+  currentPres=null;
+}
+function defaultsChanged(){
+  if(!currentPres)return;
+  const p=PRES[currentPres];
+  p.defaults.lang=document.getElementById('ml-lang').value;
+  p.defaults.avatar=document.getElementById('ml-avatar').value;
+  const chip=document.getElementById('defchip-'+currentPres);
+  const nm=document.getElementById('defname-'+currentPres);
+  if(chip)chip.textContent=LANGCODE[p.defaults.lang];
+  if(nm)nm.textContent=AVATARS[p.defaults.avatar];
+  updateDefaultLink();
+  renderLinks();
+}
+
+function langOptions(sel,defLang){
+  let h='<option value=""'+(sel===null?' selected':'')+'>Default ('+LANGS[defLang]+')</option>';
+  for(const k in LANGS)h+='<option value="'+k+'"'+(sel===k?' selected':'')+'>'+LANGS[k]+'</option>';
+  return h;
+}
+function avatarOptions(sel,defAv){
+  let h='<option value=""'+(sel===null?' selected':'')+'>Default ('+AVATARS[defAv]+')</option>';
+  for(const k in AVATARS)h+='<option value="'+k+'"'+(sel===k?' selected':'')+'>'+AVATARS[k]+'</option>';
+  return h;
+}
+
+function renderLinks(){
+  const p=PRES[currentPres];
+  const list=document.getElementById('linklist');
+  list.innerHTML=p.links.map(function(l){
+    const url=linkUrl(p,l);
+    const lang=l.lang||p.defaults.lang, av=l.avatar||p.defaults.avatar;
+    const ovL=l.lang?' <span class="ov-chip">override</span>':'';
+    const ovA=l.avatar?' <span class="ov-chip">override</span>':'';
+    const pill=l.state==='live'?'<span class="stpill live">LIVE</span>':l.state==='draft'?'<span class="stpill draft">DRAFT</span>':'<span class="stpill revoked">REVOKED</span>';
+    return '<div class="linkcard" id="lc-'+l.id+'">'
+      +'<div class="lc-top"><div style="min-width:0"><div class="lc-to">'+esc(l.to||'Unnamed recipient')+'</div>'
+      +'<div class="lc-meta"><b>'+LANGS[lang]+'</b>'+ovL+' · <b>'+AVATARS[av]+'</b>'+ovA+' · '+l.views+' · '+l.opened+'</div></div>'+pill+'</div>'
+      +'<div class="linkcell" style="margin-top:10px"><div class="linkbox">'+url+'</div>'
+      +'<button class="copybtn" onclick="copyLink(this,\'https://'+url+'\')">Copy</button></div>'
+      +'<div class="lc-actions">'
+      +'<button class="actbtn" onclick="toggleEdit(\''+l.id+'\')">Edit</button>'
+      +(l.state==='revoked'
+        ?'<button class="actbtn" onclick="setState(\''+l.id+'\',\'live\')">Re-enable</button>'
+        :'<button class="actbtn" onclick="setState(\''+l.id+'\',\'revoked\')">Revoke</button>')
+      +'</div>'
+      +'<div class="lc-edit">'
+      +'<label class="lbl">Send to (recipient)</label><input class="fld" id="ed-to-'+l.id+'" value="'+esc(l.to)+'">'
+      +'<div class="frow2"><div><label class="lbl">Language</label><select class="fld" id="ed-lang-'+l.id+'">'+langOptions(l.lang,p.defaults.lang)+'</select></div>'
+      +'<div><label class="lbl">Presenter</label><select class="fld" id="ed-av-'+l.id+'">'+avatarOptions(l.avatar,p.defaults.avatar)+'</select></div></div>'
+      +'<button class="createbtn" style="margin-top:14px;padding:11px 0" onclick="saveLink(\''+l.id+'\')">Update link</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function findLink(id){const p=PRES[currentPres];return p.links.find(function(l){return l.id===id;});}
+function toggleEdit(id){document.getElementById('lc-'+id).classList.toggle('editing');}
+function setState(id,st){findLink(id).state=st;renderLinks();}
+function saveLink(id){
+  const l=findLink(id);
+  l.to=document.getElementById('ed-to-'+id).value;
+  l.lang=document.getElementById('ed-lang-'+id).value||null;
+  l.avatar=document.getElementById('ed-av-'+id).value||null;
+  renderLinks();
+}
+function addLink(){
+  const p=PRES[currentPres];
+  const id='n'+Math.random().toString(36).slice(2,6);
+  p.links.push({id:id,to:'',lang:null,avatar:null,code:Math.random().toString(36).slice(2,6),views:'—',opened:'not opened yet',state:'draft'});
+  const c=document.getElementById('linkcount-'+currentPres);
+  if(c)c.textContent=p.links.length+' links';
+  renderLinks();
+  const card=document.getElementById('lc-'+id);
+  if(card){card.classList.add('editing');card.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+function openCreate(){backToNew();document.getElementById('f-company').focus();}
+
+function resetCreate(){
+  const btn=document.getElementById('create-btn');
+  btn.textContent='Create presentation'; btn.classList.remove('done');
+}
+function copyLink(btn,text){
+  try{navigator.clipboard&&navigator.clipboard.writeText(text);}catch(e){}
+  btn.textContent='Copied ✓'; btn.classList.add('copied');
+  setTimeout(function(){btn.textContent='Copy'; btn.classList.remove('copied');},1600);
+}
+function createPres(){
+  const btn=document.getElementById('create-btn');
+  btn.textContent='Created ✓ — now add share links'; btn.classList.add('done');
+  setTimeout(function(){resetCreate();},2400);
+}
+</script>

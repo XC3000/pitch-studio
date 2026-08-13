@@ -1,0 +1,91 @@
+/* Viewer stage animations — ported from the Avatar Pitch prototype. */
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.005); }
+}
+@keyframes ping-dot {
+  0% { transform: scale(0.55); opacity: 0.9; }
+  70% { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes micpulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+@keyframes talk {
+  0%, 100% { transform: scaleY(0.25); }
+  40% { transform: scaleY(1); }
+  70% { transform: scaleY(0.55); }
+}
+@keyframes bob {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(1.4deg); }
+}
+@keyframes gesture {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-5deg); }
+}
+@keyframes evbadge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 91, 245, 0); transform: scale(1); }
+  50% { box-shadow: 0 0 0 8px rgba(61, 91, 245, 0.28); transform: scale(1.06); }
+}
+@keyframes chipin {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardin {
+  0% { opacity: 0; transform: translateY(22px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cuein {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes stagepulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 91, 245, 0); border-color: #3d5bf5; }
+  50% { box-shadow: 0 0 0 6px rgba(61, 91, 245, 0.16); border-color: #3d5bf5; }
+}
+@keyframes traveldot {
+  0% { left: 0%; }
+  100% { left: 100%; }
+}
+@keyframes fillbar {
+  0% { width: 0%; }
+  100% { width: var(--w, 100%); }
+}
+@keyframes starfill {
+  0% { opacity: 0.18; transform: scale(0.6); }
+  60% { transform: scale(1.18); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes evacfly {
+  0% { left: 0; transform: translate(-50%, -50%) rotate(0deg); }
+  100% { left: 100%; transform: translate(-50%, -50%) rotate(6deg); }
+}
+@keyframes checkpop {
+  0% { opacity: 0; transform: scale(0.3); }
+  70% { transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.viewer-ask-chip {
+  font: 500 12px Inter, sans-serif;
+  color: #475569;
+  background: #fff;
+  border: 1px solid #d8e1f0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px -6px rgba(30, 58, 138, 0.15);
+  transition: all 0.25s;
+}
+.viewer-ask-chip:hover {
+  border-color: #3d5bf5;
+  color: #3d5bf5;
+  background: #f5f8ff;
+}
