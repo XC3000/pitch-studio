@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -20,13 +21,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={`${inter.variable} h-full font-sans antialiased`} suppressHydrationWarning>
-        <body className="min-h-full flex flex-col">
+    <html lang="en" className={`${inter.variable} h-full font-sans antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col">
+        <ClerkProvider appearance={{ theme: shadcn }}>
           {children}
           <Toaster position="bottom-right" richColors closeButton />
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
