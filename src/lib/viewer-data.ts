@@ -6,7 +6,7 @@
  * This is a public entry point: the org is derived FROM the resolved link,
  * never from the caller, and every subsequent read is filtered to that org.
  */
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { schema, systemDb } from "@/db/system";
 import { cookieNameFor, verifyUnlockToken } from "@/lib/passcode";
@@ -58,7 +58,7 @@ export async function resolveQaContext(linkId: string) {
     .from(schema.shareLinks)
     .innerJoin(schema.presentations, eq(schema.shareLinks.presentationId, schema.presentations.id))
     .innerJoin(schema.organizations, eq(schema.presentations.orgId, schema.organizations.id))
-    .where(eq(schema.shareLinks.id, linkId))
+    .where(or(eq(schema.shareLinks.id, linkId), eq(schema.shareLinks.code, linkId)))
     .limit(1);
   if (!row || row.link.status !== "live") return null;
   if (row.link.expiresAt && row.link.expiresAt.getTime() < Date.now()) return null;

@@ -5,6 +5,8 @@
  * back to the managed OCR service (src/lib/ocr.ts) if configured.
  */
 
+import fs from "node:fs/promises";
+import path from "node:path";
 import { extractDocumentText, ocrConfigured } from "@/lib/ocr";
 
 export type ParsedDoc = {
@@ -31,8 +33,32 @@ export async function parseDocument(bytes: Uint8Array, mime: string, filename: s
   throw new Error(`Unsupported document type: ${mime || filename}`);
 }
 
+
+
+import { pathToFileURL } from "node:url";
+
+let cachedWorkerUrl: string | null = null;
+
+function getWorkerUrl(): string {
+  if (cachedWorkerUrl) return cachedWorkerUrl;
+  const workerFilePath = path.resolve(
+    process.cwd(),
+    "node_modules/pdf-parse/dist/pdf-parse/web/pdf.worker.mjs",
+  );
+  cachedWorkerUrl = pathToFileURL(workerFilePath).href;
+  return cachedWorkerUrl;
+}
+
 async function parsePdf(bytes: Uint8Array, mime: string, filename: string): Promise<ParsedDoc> {
+  if (typeof globalThis.self === "undefined") {
+    (globalThis as unknown as { self: typeof globalThis }).self = globalThis;
+  }
   const { PDFParse } = await import("pdf-parse");
+  try {
+    PDFParse.setWorker(getWorkerUrl());
+  } catch {
+    // fallback if node_modules path is unavailable
+  }
   const parser = new PDFParse({ data: bytes });
   try {
     const result = await parser.getText();

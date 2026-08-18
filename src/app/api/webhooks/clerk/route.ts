@@ -4,13 +4,15 @@ import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { schema, systemDb } from "@/db/system";
 
+import { env } from "@/env";
+
 /**
  * Mirrors Clerk organizations + memberships into our tables so every tenant
  * row can FK to an organization. Configure in Clerk dashboard:
  * endpoint /api/webhooks/clerk, events: organization.*, organizationMembership.*
  */
 export async function POST(req: Request) {
-  const secret = process.env.CLERK_WEBHOOK_SECRET;
+  const secret = env.CLERK_WEBHOOK_SECRET;
   if (!secret) return NextResponse.json({ error: "webhook not configured" }, { status: 503 });
 
   const payload = await req.text();

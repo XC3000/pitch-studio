@@ -20,6 +20,7 @@
     "@clerk/ui": "^1.30.3",
     "@neondatabase/serverless": "^1.1.0",
     "@paralleldrive/cuid2": "^3.3.0",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "class-variance-authority": "^0.7.1",

@@ -5,15 +5,11 @@
  */
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
+import { env } from "@/env";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
-
 function createDb() {
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not set — add it to .env.local (see .env.example)");
-  }
-  return drizzle(neon(connectionString), { schema, casing: "snake_case" });
+  return drizzle(neon(env.DATABASE_URL), { schema, casing: "snake_case" });
 }
 
 let _db: ReturnType<typeof createDb> | undefined;

@@ -5,14 +5,8 @@
  *
  *   npm run db:seed
  */
-import { readFileSync } from "node:fs";
 import { and, eq, isNull } from "drizzle-orm";
-
-// Load .env.local (drizzle/neon client reads DATABASE_URL lazily).
-for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8").split("\n")) {
-  const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-}
+import { env } from "../src/env";
 
 async function main() {
   const { systemDb, schema } = await import("../src/db/system");

@@ -1,13 +1,12 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
 /**
  * Only the admin studio requires auth. The viewer (/p/…), Q&A, tracking and
  * webhooks are public by design — share links are the viewer's credential.
  */
-const isAdminRoute = createRouteMatcher(["/o(.*)", "/onboarding(.*)"]);
-
 export default clerkMiddleware(async (auth, req) => {
-  if (isAdminRoute(req)) {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/o") || pathname.startsWith("/onboarding")) {
     await auth.protect();
   }
 });

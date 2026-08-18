@@ -16,7 +16,9 @@ export type LlmProvider = "openrouter" | "deepseek";
  * script-generation and Q&A calls; OpenRouter stays fully wired for its live
  * multi-model catalog and free-model fallback chain.
  */
-const LLM_PROVIDER: LlmProvider = (process.env.LLM_PROVIDER as LlmProvider | undefined) || "deepseek";
+export function getLlmProvider(): LlmProvider {
+  return (process.env.LLM_PROVIDER as LlmProvider | undefined) || "deepseek";
+}
 
 const PROVIDER_BASE_URL: Record<LlmProvider, string> = {
   openrouter: "https://openrouter.ai/api/v1",
@@ -25,7 +27,7 @@ const PROVIDER_BASE_URL: Record<LlmProvider, string> = {
 
 /** Env var name for the active provider's key — used in user-facing error copy. */
 export function llmKeyEnvVar(): string {
-  return LLM_PROVIDER === "deepseek" ? "DEEPSEEK_API_KEY" : "OPENROUTER_API_KEY";
+  return getLlmProvider() === "deepseek" ? "DEEPSEEK_API_KEY" : "OPENROUTER_API_KEY";
 }
 
 export type ModelInfo = {
@@ -45,10 +47,15 @@ const FALLBACK_DEFAULT_MODEL: Record<LlmProvider, string> = {
   deepseek: "deepseek-chat",
 };
 
-export const QA_MODEL = process.env.LLM_DEFAULT_MODEL || FALLBACK_DEFAULT_MODEL[LLM_PROVIDER];
+export function getQaModel(): string {
+  return process.env.LLM_DEFAULT_MODEL || FALLBACK_DEFAULT_MODEL[getLlmProvider()];
+}
+
+export const QA_MODEL = getQaModel();
 
 export function llmConfigured() {
-  return LLM_PROVIDER === "deepseek" ? !!process.env.DEEPSEEK_API_KEY : !!process.env.OPENROUTER_API_KEY;
+  const provider = getLlmProvider();
+  return provider === "deepseek" ? !!process.env.DEEPSEEK_API_KEY : !!process.env.OPENROUTER_API_KEY;
 }
 
 /**
@@ -89,7 +96,8 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 
 /** Live model catalog. OpenRouter: fetched + cached for an hour. DeepSeek: static list (no discovery endpoint). */
 export async function catalog(): Promise<ModelInfo[]> {
-  if (LLM_PROVIDER === "deepseek") return DEEPSEEK_MODELS;
+  const provider = getLlmProvider();
+  if (provider === "deepseek") return DEEPSEEK_MODELS;
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.models;
   const res = await fetch(`${PROVIDER_BASE_URL.openrouter}/models`);
   if (!res.ok) {
@@ -157,7 +165,8 @@ async function fallbackChain(primary: string): Promise<string[]> {
 }
 
 function headers(): Record<string, string> {
-  if (LLM_PROVIDER === "deepseek") {
+  const provider = getLlmProvider();
+  if (provider === "deepseek") {
     if (!process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not set");
     return {
       authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
@@ -190,16 +199,17 @@ export async function chatComplete(opts: {
   };
   // OpenRouter accepts a `models` fallback array (free-tier 429s are common upstream);
   // DeepSeek direct is a single-vendor call, so just pass the one model id.
-  if (LLM_PROVIDER === "openrouter") body.models = await fallbackChain(model);
+  const provider = getLlmProvider();
+  if (provider === "openrouter") body.models = await fallbackChain(model);
   else body.model = model;
 
-  const res = await fetch(`${PROVIDER_BASE_URL[LLM_PROVIDER]}/chat/completions`, {
+  const res = await fetch(`${PROVIDER_BASE_URL[provider]}/chat/completions`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    throw new Error(`${LLM_PROVIDER} chat completion failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
+    throw new Error(`${provider} chat completion failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
   }
   const data = (await res.json()) as {
     model?: string;
@@ -239,7 +249,8 @@ export async function streamAnswer(opts: {
       { role: "user", content: opts.userContent },
     ],
   };
-  if (LLM_PROVIDER === "openrouter") {
+  const provider = getLlmProvider();
+  if (provider === "openrouter") {
     body.models = await fallbackChain(model);
     body.usage = { include: true };
   } else {
@@ -248,13 +259,13 @@ export async function streamAnswer(opts: {
     body.stream_options = { include_usage: true };
   }
 
-  const res = await fetch(`${PROVIDER_BASE_URL[LLM_PROVIDER]}/chat/completions`, {
+  const res = await fetch(`${PROVIDER_BASE_URL[provider]}/chat/completions`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) {
-    throw new Error(`${LLM_PROVIDER} stream failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
+    throw new Error(`${provider} stream failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
   }
 
   let text = "";

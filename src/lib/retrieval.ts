@@ -44,9 +44,9 @@ export type RetrievalResult = {
 
 const TOP_K = 8;
 /** below this floor a chunk isn't worth showing the model at all */
-const MIN_SIMILARITY = Number(process.env.QA_MIN_SIMILARITY ?? "0.35");
+const MIN_SIMILARITY = Number(process.env.QA_MIN_SIMILARITY ?? "0.20");
 /** the best chunk must clear this bar or we answer with the org fallback */
-export const GROUNDING_THRESHOLD = Number(process.env.QA_GROUNDING_THRESHOLD ?? "0.45");
+export const GROUNDING_THRESHOLD = Number(process.env.QA_GROUNDING_THRESHOLD ?? "0.25");
 
 /**
  * The pool a single vector search runs over. `org` is the widest (all indexed

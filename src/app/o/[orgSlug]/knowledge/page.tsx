@@ -47,7 +47,7 @@ export default async function KnowledgePage({
   ]);
 
   return (
-    <div className="mx-auto max-w-[1080px] px-7 py-8">
+    <div className="mx-auto max-w-[1080px] px-4 py-6 sm:px-7 sm:py-8">
       <div className="eyebrow">Live Q&amp;A</div>
       <h2 className="mt-1 text-2xl">Knowledge base</h2>
       <p className="mt-1.5 max-w-[620px] text-sm text-ink-2">

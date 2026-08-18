@@ -7,7 +7,7 @@
  * source is mid-pipeline — the mock's "indexing… 64%" row.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,36 +67,31 @@ export function KnowledgeManager({
   const fileRef = useRef<HTMLInputElement>(null);
   const { run } = useAction();
 
-  // ── status polling while anything is indexing ─────────────────────────────
-  const active =
-    documents.some((d) => ACTIVE_STATUSES.has(d.status)) || facts.some((f) => ACTIVE_STATUSES.has(f.status));
-  useEffect(() => {
-    if (!active) return;
-    let cancelled = false;
-    const iv = setInterval(async () => {
-      try {
-        const status = await getKnowledgeStatus(orgSlug);
-        if (!cancelled) {
-          setDocuments(status.documents);
-          setFacts(status.facts);
-        }
-      } catch {
-        // transient — keep polling
-      }
-    }, 2500);
-    return () => {
-      cancelled = true;
-      clearInterval(iv);
-    };
-  }, [active, orgSlug]);
+
 
   const refresh = async () => {
     try {
       const status = await getKnowledgeStatus(orgSlug);
       setDocuments(status.documents);
       setFacts(status.facts);
+
+      // Follow up once or twice if an item is currently mid-pipeline so the UI updates to 'indexed'
+      if (
+        status.documents.some((d) => ACTIVE_STATUSES.has(d.status)) ||
+        status.facts.some((f) => ACTIVE_STATUSES.has(f.status))
+      ) {
+        setTimeout(async () => {
+          try {
+            const nextStatus = await getKnowledgeStatus(orgSlug);
+            setDocuments(nextStatus.documents);
+            setFacts(nextStatus.facts);
+          } catch {
+            // ignore transient error
+          }
+        }, 1500);
+      }
     } catch {
-      // transient — the polling loop will catch up
+      // ignore transient error
     }
   };
 
@@ -151,15 +146,15 @@ export function KnowledgeManager({
     <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_380px]">
       <div className="flex flex-col gap-5">
         {/* indexed sources */}
-        <section className="rounded-[16px] border border-line bg-panel p-5 shadow-card">
-          <div className="flex items-center justify-between gap-3">
+        <section className="rounded-[16px] border border-line bg-panel p-4 sm:p-5 shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="eyebrow">Indexed sources</span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               {presentations.length > 0 && (
                 <Select value={uploadScope} onValueChange={setUploadScope}>
                   <SelectTrigger
                     size="sm"
-                    className="h-7 gap-1.5 border-line bg-panel-2 text-[11.5px] font-normal text-ink-2"
+                    className="h-7 max-w-[180px] sm:max-w-[220px] gap-1.5 border-line bg-panel-2 text-[11.5px] font-normal text-ink-2 truncate"
                     title="Which presentation this document is scoped to for Q&A retrieval"
                   >
                     <SelectValue />
@@ -285,45 +280,47 @@ function DocumentItem({
   const linkButton =
     "h-auto p-0 text-[11px] font-semibold hover:bg-transparent";
   return (
-    <div className="flex items-center gap-3 border-b border-line py-3 last:border-none">
-      <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-accent-soft text-base">📄</span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[13.5px] font-semibold">{doc.filename}</div>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-ink-3">
-          <StatusPill status={doc.status} progressPct={ACTIVE_STATUSES.has(doc.status) ? doc.progressPct : undefined} />
-          {doc.chunkCount > 0 && <span>{doc.chunkCount} chunks</span>}
-          {presentations.length > 0 && (
-            <Select
-              value={doc.presentationId ?? ORG_SCOPE}
-              onValueChange={(v) =>
-                run(() => setDocumentScope(orgSlug, doc.id, v === ORG_SCOPE ? null : v), {
-                  success: "Scope updated",
-                  onSuccess: () => void onChanged(),
-                })
-              }
-            >
-              <SelectTrigger
-                size="sm"
-                className="h-6 gap-1 border-none bg-transparent px-1.5 py-0 text-[11px] font-normal text-ink-3 hover:text-ink"
-                title="Retrieval scope"
-                disabled={pending}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line py-3 last:border-none">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[9px] bg-accent-soft text-base">📄</span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13.5px] font-semibold">{doc.filename}</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-ink-3">
+            <StatusPill status={doc.status} progressPct={ACTIVE_STATUSES.has(doc.status) ? doc.progressPct : undefined} />
+            {doc.chunkCount > 0 && <span>{doc.chunkCount} chunks</span>}
+            {presentations.length > 0 && (
+              <Select
+                value={doc.presentationId ?? ORG_SCOPE}
+                onValueChange={(v) =>
+                  run(() => setDocumentScope(orgSlug, doc.id, v === ORG_SCOPE ? null : v), {
+                    success: "Scope updated",
+                    onSuccess: () => void onChanged(),
+                  })
+                }
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ORG_SCOPE}>Org-wide</SelectItem>
-                {presentations.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {doc.error && <span className="truncate text-bad">{doc.error}</span>}
+                <SelectTrigger
+                  size="sm"
+                  className="h-6 max-w-[140px] sm:max-w-[180px] gap-1 border-none bg-transparent px-1.5 py-0 text-[11px] font-normal text-ink-3 hover:text-ink truncate"
+                  title="Retrieval scope"
+                  disabled={pending}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ORG_SCOPE}>Org-wide</SelectItem>
+                  {presentations.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {doc.error && <span className="truncate text-bad">{doc.error}</span>}
+          </div>
         </div>
       </div>
-      <div className="flex flex-none gap-2">
+      <div className="flex flex-wrap items-center gap-2.5 sm:flex-none">
         {doc.ragEnabled && (doc.status === "failed" || doc.status === "indexed") && (
           <Button
             variant="ghost"
@@ -484,7 +481,7 @@ function FallbackCard({ orgSlug, fallbackText }: { orgSlug: string; fallbackText
   const [text, setText] = useState(fallbackText);
   const [saved, setSaved] = useState(false);
   return (
-    <section className="rounded-[16px] border border-line bg-panel p-5 shadow-card">
+    <section className="rounded-[16px] border border-line bg-panel p-4 sm:p-5 shadow-card">
       <span className="eyebrow">Fallback when nothing matches</span>
       <Textarea
         value={text}
@@ -495,11 +492,11 @@ function FallbackCard({ orgSlug, fallbackText }: { orgSlug: string; fallbackText
         rows={3}
         className="mt-3 w-full bg-panel-2 px-4 py-3 text-[12.5px] leading-relaxed"
       />
-      <div className="mt-2 flex items-center justify-between">
+      <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <p className="text-[11px] text-ink-3">Spoken verbatim below the grounding threshold — never invented.</p>
         <Button
           size="sm"
-          className="rounded-full px-4 text-[12px] font-semibold"
+          className="self-end sm:self-auto rounded-full px-4 text-[12px] font-semibold"
           disabled={pending || text.trim() === fallbackText || !text.trim()}
           onClick={() =>
             run(() => updateFallbackText(orgSlug, text), {
@@ -530,7 +527,7 @@ function TestConsole({ orgSlug }: { orgSlug: string }) {
   };
 
   return (
-    <section className="rounded-[16px] border border-line bg-panel p-5 shadow-card">
+    <section className="rounded-[16px] border border-line bg-panel p-4 sm:p-5 shadow-card">
       <span className="eyebrow">Test a question</span>
       <p className="mt-1.5 text-[12px] text-ink-3">
         Runs the exact retrieval + answer path viewers hit — check grounding before you send a link.
@@ -572,7 +569,7 @@ function TestConsole({ orgSlug }: { orgSlug: string }) {
                 </Badge>
               ))
             )}
-            <span className="ml-auto text-[10.5px] text-ink-3">
+            <span className="text-[10.5px] text-ink-3 sm:ml-auto">
               confidence {(result.confidence * 100).toFixed(0)}% · {(result.latencyMs / 1000).toFixed(1)}s
             </span>
           </div>

@@ -1,0 +1,53 @@
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
+
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z.string().min(1),
+    CLERK_SECRET_KEY: z.string().min(1),
+    CLERK_WEBHOOK_SECRET: z.string().optional(),
+    HEYGEN_API_KEY: z.string().optional(),
+    HEYGEN_WEBHOOK_SECRET: z.string().optional(),
+    HEYGEN_USD_PER_MIN: z.string().optional(),
+    R2_ACCOUNT_ID: z.string().optional(),
+    R2_ACCESS_KEY_ID: z.string().optional(),
+    R2_SECRET_ACCESS_KEY: z.string().optional(),
+    R2_DOCS_BUCKET: z.string().optional(),
+    R2_MEDIA_BUCKET: z.string().optional(),
+    R2_MEDIA_PUBLIC_URL: z.string().optional(),
+    INNGEST_DEV: z.string().optional(),
+    OPENROUTER_API_KEY: z.string().optional(),
+    OPENAI_API_KEY: z.string().optional(),
+    DEEPSEEK_API_KEY: z.string().optional(),
+    LLM_PROVIDER: z.string().optional(),
+    LLM_DEFAULT_MODEL: z.string().optional(),
+    VOYAGE_API_KEY: z.string().optional(),
+    VOYAGE_USD_PER_MTOK: z.string().optional(),
+    MISTRAL_API_KEY: z.string().optional(),
+    OCR_PROVIDER: z.string().optional(),
+    ELEVENLABS_API_KEY: z.string().optional(),
+    ELEVENLABS_MODEL: z.string().optional(),
+    ELEVENLABS_USD_PER_1K_CHARS: z.string().optional(),
+    UPSTASH_REDIS_REST_URL: z.string().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+    VIEWER_UNLOCK_SECRET: z.string().optional(),
+    QA_MIN_SIMILARITY: z.string().optional(),
+    QA_GROUNDING_THRESHOLD: z.string().optional(),
+  },
+  client: {
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().optional(),
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().optional(),
+    NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.string().optional(),
+    NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().optional(),
+  },
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+    NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:
+      process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
+    NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL:
+      process.env.NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL,
+  },
+});

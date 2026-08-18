@@ -131,11 +131,15 @@ export async function finishDocumentUpload(
     if (!doc.ragEnabled) {
       await scope.db
         .update(schema.documents)
-        .set({ status: "stored", progressPct: 100 })
+        .set({ status: "stored", progressPct: 100, error: null })
         .where(scope.own(schema.documents, eq(schema.documents.id, documentId)));
       revalidatePath(`/o/${orgSlug}/knowledge`);
       return;
     }
+    await scope.db
+      .update(schema.documents)
+      .set({ status: "uploaded", progressPct: 0, error: null })
+      .where(scope.own(schema.documents, eq(schema.documents.id, documentId)));
     await inngest.send(docIngestEvent.create({ orgId: org.id, documentId }));
     revalidatePath(`/o/${orgSlug}/knowledge`);
   });
