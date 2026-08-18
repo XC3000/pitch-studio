@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm db:migrate && next build",
     "start": "next start",
     "lint": "eslint",
+    "db:migrate": "tsx scripts/migrate-prod.ts",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
