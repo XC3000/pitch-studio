@@ -46,6 +46,10 @@ export default async function KnowledgePage({
       .orderBy(asc(schema.presentations.name)),
   ]);
 
+  const inngestConnected =
+    process.env.NODE_ENV === "development" ||
+    (Boolean(process.env.INNGEST_EVENT_KEY) && Boolean(process.env.INNGEST_SIGNING_KEY));
+
   return (
     <div className="mx-auto max-w-[1080px] px-4 py-6 sm:px-7 sm:py-8">
       <div className="eyebrow">Live Q&amp;A</div>
@@ -62,6 +66,7 @@ export default async function KnowledgePage({
         initialFacts={facts as FactRow[]}
         presentations={presentations as PresentationOption[]}
         fallbackText={org.qaFallbackText}
+        inngestConnected={inngestConnected}
       />
     </div>
   );

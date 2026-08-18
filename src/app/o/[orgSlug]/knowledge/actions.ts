@@ -300,6 +300,10 @@ export async function updateFallbackText(orgSlug: string, text: string): Promise
 export async function getKnowledgeStatus(orgSlug: string) {
   const { org } = await requireOrg(orgSlug);
   const scope = forOrg(org.id);
+  const inngestConnected =
+    process.env.NODE_ENV === "development" ||
+    (Boolean(process.env.INNGEST_EVENT_KEY) && Boolean(process.env.INNGEST_SIGNING_KEY));
+
   const [documents, facts] = await Promise.all([
     scope.db
       .select({
@@ -327,7 +331,7 @@ export async function getKnowledgeStatus(orgSlug: string) {
       .where(scope.own(schema.facts))
       .orderBy(desc(schema.facts.createdAt)),
   ]);
-  return { documents: documents as DocumentRow[], facts: facts as FactRow[] };
+  return { documents, facts, inngestConnected };
 }
 
 export type TestAnswer = Pick<

@@ -8,6 +8,7 @@
  */
 
 import { useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ type Props = {
   initialFacts: FactRow[];
   presentations: PresentationOption[];
   fallbackText: string;
+  inngestConnected?: boolean;
 };
 
 export function KnowledgeManager({
@@ -58,9 +60,11 @@ export function KnowledgeManager({
   initialFacts,
   presentations,
   fallbackText,
+  inngestConnected = true,
 }: Props) {
   const [documents, setDocuments] = useState(initialDocuments);
   const [facts, setFacts] = useState(initialFacts);
+  const [inngestStatus, setInngestStatus] = useState(inngestConnected);
   const [uploading, setUploading] = useState(false);
   const [ragEnabled, setRagEnabled] = useState(true);
   const [uploadScope, setUploadScope] = useState<string>(ORG_SCOPE);
@@ -74,6 +78,9 @@ export function KnowledgeManager({
       const status = await getKnowledgeStatus(orgSlug);
       setDocuments(status.documents);
       setFacts(status.facts);
+      if (typeof status.inngestConnected === "boolean") {
+        setInngestStatus(status.inngestConnected);
+      }
 
       // Follow up once or twice if an item is currently mid-pipeline so the UI updates to 'indexed'
       if (
@@ -85,6 +92,9 @@ export function KnowledgeManager({
             const nextStatus = await getKnowledgeStatus(orgSlug);
             setDocuments(nextStatus.documents);
             setFacts(nextStatus.facts);
+            if (typeof nextStatus.inngestConnected === "boolean") {
+              setInngestStatus(nextStatus.inngestConnected);
+            }
           } catch {
             // ignore transient error
           }
@@ -145,10 +155,32 @@ export function KnowledgeManager({
   return (
     <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_380px]">
       <div className="flex flex-col gap-5">
-        {/* indexed sources */}
         <section className="rounded-[16px] border border-line bg-panel p-4 sm:p-5 shadow-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <span className="eyebrow">Indexed sources</span>
+            <div className="flex items-center gap-2">
+              <span className="eyebrow">Indexed sources</span>
+              <div
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-medium border transition-colors",
+                  inngestStatus
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                )}
+                title={
+                  inngestStatus
+                    ? "Inngest background job worker is connected"
+                    : "Inngest keys missing in environment variables"
+                }
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    inngestStatus ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                  )}
+                />
+                {inngestStatus ? "Inngest Connected" : "Inngest Disconnected"}
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               {presentations.length > 0 && (
                 <Select value={uploadScope} onValueChange={setUploadScope}>
