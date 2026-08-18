@@ -59,6 +59,9 @@ importers:
       pdf-parse:
         specifier: ^2.4.5
         version: 2.4.5
+      pdf2json:
+        specifier: ^4.0.3
+        version: 4.0.3
       radix-ui:
         specifier: ^1.6.2
         version: 1.6.7(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -5846,6 +5849,11 @@ packages:
   pdf-parse@2.4.5:
     resolution: {integrity: sha512-mHU89HGh7v+4u2ubfnevJ03lmPgQ5WU4CxAVmTSh/sxVTEDYd1er/dKS/A6vg77NX47KTEoihq8jZBLr8Cxuwg==}
     engines: {node: '>=20.16.0 <21 || >=22.3.0'}
+    hasBin: true
+
+  pdf2json@4.0.3:
+    resolution: {integrity: sha512-QErPemxRHDI2RUli3+9/mv4V6Ib9VWI+UoP2S82yXEQtoXzWvu9NSjjo3vyiUiVJv+CJFuzNiKUI+UFFUdv8Lg==}
+    engines: {node: '>=20.18.0'}
     hasBin: true
 
   pdfjs-dist@5.4.296:
@@ -13177,6 +13185,8 @@ snapshots:
     dependencies:
       '@napi-rs/canvas': 0.1.80
       pdfjs-dist: 5.4.296
+
+  pdf2json@4.0.3: {}
 
   pdfjs-dist@5.4.296:
     optionalDependencies:

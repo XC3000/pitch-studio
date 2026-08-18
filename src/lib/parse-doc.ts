@@ -35,77 +35,68 @@ export async function parseDocument(bytes: Uint8Array, mime: string, filename: s
 
 
 
-import { pathToFileURL } from "node:url";
-
-let cachedWorkerUrl: string | null = null;
-
-function getWorkerUrl(): string {
-  if (cachedWorkerUrl) return cachedWorkerUrl;
-  const workerFilePath = path.resolve(
-    process.cwd(),
-    "node_modules/pdf-parse/dist/pdf-parse/web/pdf.worker.mjs",
-  );
-  cachedWorkerUrl = pathToFileURL(workerFilePath).href;
-  return cachedWorkerUrl;
+function safeDecodeUriComponent(str: string): string {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    try {
+      return decodeURIComponent(str.replace(/%(?![0-9A-Fa-f]{2})/g, "%25"));
+    } catch {
+      return str;
+    }
+  }
 }
 
 async function parsePdf(bytes: Uint8Array, mime: string, filename: string): Promise<ParsedDoc> {
-  if (typeof globalThis.self === "undefined") {
-    (globalThis as unknown as { self: typeof globalThis }).self = globalThis;
-  }
-  if (typeof globalThis.DOMMatrix === "undefined") {
-    class DOMMatrixPolyfill {
-      a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
-      m11 = 1; m12 = 0; m13 = 0; m14 = 0;
-      m21 = 0; m22 = 1; m23 = 0; m24 = 0;
-      m31 = 0; m32 = 0; m33 = 1; m34 = 0;
-      m41 = 0; m42 = 0; m43 = 0; m44 = 1;
-      is2D = true;
-      isIdentity = true;
-      constructor(init?: string | number[]) {
-        if (Array.isArray(init) && init.length >= 6) {
-          this.a = init[0]; this.b = init[1]; this.c = init[2];
-          this.d = init[3]; this.e = init[4]; this.f = init[5];
-          this.m11 = init[0]; this.m12 = init[1]; this.m21 = init[2];
-          this.m22 = init[3]; this.m41 = init[4]; this.m42 = init[5];
-        }
+  const PDFParser = (await import("pdf2json")).default;
+
+  return new Promise((resolve, reject) => {
+    const pdfParser = new PDFParser(null, true);
+
+    pdfParser.on("pdfParser_dataError", (errData) => {
+      const errMessage = typeof errData === "object" && errData && "parserError" in errData
+        ? String(errData.parserError)
+        : "PDF parsing failed";
+      
+      if (ocrConfigured()) {
+        ocrFallback(bytes, mime, filename).then(resolve).catch(reject);
+      } else {
+        reject(new Error(errMessage));
       }
-      multiply() { return this; }
-      translate() { return this; }
-      scale() { return this; }
-      rotate() { return this; }
-      inverse() { return this; }
-      transformPoint(pt?: unknown) { return pt || { x: 0, y: 0 }; }
-    }
-    (globalThis as unknown as { DOMMatrix: typeof DOMMatrixPolyfill }).DOMMatrix = DOMMatrixPolyfill as unknown as typeof DOMMatrix;
-  }
-  if (typeof globalThis.Path2D === "undefined") {
-    (globalThis as unknown as { Path2D: unknown }).Path2D = class Path2D {};
-  }
-  if (typeof globalThis.ImageData === "undefined") {
-    (globalThis as unknown as { ImageData: unknown }).ImageData = class ImageData {};
-  }
-  const { PDFParse } = await import("pdf-parse");
-  try {
-    PDFParse.setWorker(getWorkerUrl());
-  } catch {
-    // fallback if node_modules path is unavailable
-  }
-  const parser = new PDFParse({ data: bytes });
-  try {
-    const result = await parser.getText();
-    const pages = (result.pages ?? []).filter((p) => p.text.trim());
-    if (pages.length > 0) {
-      return { blocks: pages.map((p) => ({ text: p.text, page: p.num })) };
-    }
-    const text = (result as unknown as { text?: string }).text ?? "";
-    if (text.trim()) return { blocks: [{ text }] };
-    // No embedded text layer — likely a scanned/image PDF. OCR it if we can.
-    if (ocrConfigured()) return ocrFallback(bytes, mime, filename);
-    throw new Error("PDF contained no extractable text (no text layer; set MISTRAL_API_KEY to OCR scanned PDFs)");
-  } finally {
-    await parser.destroy().catch(() => {});
-  }
+    });
+
+    pdfParser.on("pdfParser_dataReady", (pdfData) => {
+      const blocks: { text: string; page?: number }[] = [];
+
+      (pdfData.Pages ?? []).forEach((page, index) => {
+        const pageText = (page.Texts ?? [])
+          .map((t) => (t.R ?? []).map((r) => safeDecodeUriComponent(r.T)).join(" "))
+          .join(" ")
+          .trim();
+
+        if (pageText) {
+          blocks.push({ text: pageText, page: index + 1 });
+        }
+      });
+
+      if (blocks.length > 0) {
+        return resolve({ blocks });
+      }
+
+      if (ocrConfigured()) {
+        ocrFallback(bytes, mime, filename).then(resolve).catch(reject);
+      } else {
+        reject(
+          new Error(
+            "PDF contained no extractable text (no text layer; set MISTRAL_API_KEY to OCR scanned PDFs)",
+          ),
+        );
+      }
+    });
+
+    const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    pdfParser.parseBuffer(buffer);
+  });
 }
 
 async function ocrFallback(bytes: Uint8Array, mime: string, filename: string): Promise<ParsedDoc> {
