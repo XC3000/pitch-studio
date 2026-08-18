@@ -13,9 +13,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|mp4|webm)).*)",
-    "/(api|trpc)(.*)",
-    "/__clerk/:path*",
+    // Skip Next.js internals, static files, inngest endpoint, and webhooks
+    "/((?!_next|api/inngest|api/webhooks|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|mp4|webm)).*)",
+    "/o(.*)",
+    "/onboarding(.*)",
   ],
 };
