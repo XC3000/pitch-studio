@@ -53,6 +53,38 @@ async function parsePdf(bytes: Uint8Array, mime: string, filename: string): Prom
   if (typeof globalThis.self === "undefined") {
     (globalThis as unknown as { self: typeof globalThis }).self = globalThis;
   }
+  if (typeof globalThis.DOMMatrix === "undefined") {
+    class DOMMatrixPolyfill {
+      a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
+      m11 = 1; m12 = 0; m13 = 0; m14 = 0;
+      m21 = 0; m22 = 1; m23 = 0; m24 = 0;
+      m31 = 0; m32 = 0; m33 = 1; m34 = 0;
+      m41 = 0; m42 = 0; m43 = 0; m44 = 1;
+      is2D = true;
+      isIdentity = true;
+      constructor(init?: string | number[]) {
+        if (Array.isArray(init) && init.length >= 6) {
+          this.a = init[0]; this.b = init[1]; this.c = init[2];
+          this.d = init[3]; this.e = init[4]; this.f = init[5];
+          this.m11 = init[0]; this.m12 = init[1]; this.m21 = init[2];
+          this.m22 = init[3]; this.m41 = init[4]; this.m42 = init[5];
+        }
+      }
+      multiply() { return this; }
+      translate() { return this; }
+      scale() { return this; }
+      rotate() { return this; }
+      inverse() { return this; }
+      transformPoint(pt?: unknown) { return pt || { x: 0, y: 0 }; }
+    }
+    (globalThis as unknown as { DOMMatrix: typeof DOMMatrixPolyfill }).DOMMatrix = DOMMatrixPolyfill as unknown as typeof DOMMatrix;
+  }
+  if (typeof globalThis.Path2D === "undefined") {
+    (globalThis as unknown as { Path2D: unknown }).Path2D = class Path2D {};
+  }
+  if (typeof globalThis.ImageData === "undefined") {
+    (globalThis as unknown as { ImageData: unknown }).ImageData = class ImageData {};
+  }
   const { PDFParse } = await import("pdf-parse");
   try {
     PDFParse.setWorker(getWorkerUrl());
