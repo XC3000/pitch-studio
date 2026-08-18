@@ -1,11 +1,15 @@
 import { Inngest, eventType } from "inngest";
 import { z } from "zod";
 
+const isDev =
+  process.env.NODE_ENV !== "production" &&
+  (process.env.INNGEST_DEV === "1" || !process.env.INNGEST_EVENT_KEY);
+
 export const inngest = new Inngest({
   id: "pitch-studio",
-  eventKey: process.env.INNGEST_EVENT_KEY,
-  signingKey: process.env.INNGEST_SIGNING_KEY,
-  isDev: process.env.NODE_ENV === "development" && process.env.INNGEST_DEV === "1",
+  ...(process.env.INNGEST_EVENT_KEY ? { eventKey: process.env.INNGEST_EVENT_KEY } : {}),
+  ...(process.env.INNGEST_SIGNING_KEY ? { signingKey: process.env.INNGEST_SIGNING_KEY } : {}),
+  isDev,
 });
 
 // Typed events (Inngest v4): use as function triggers, and build payloads with
