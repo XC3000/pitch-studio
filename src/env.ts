@@ -16,6 +16,8 @@ export const env = createEnv({
     R2_MEDIA_BUCKET: z.string().optional(),
     R2_MEDIA_PUBLIC_URL: z.string().optional(),
     INNGEST_DEV: z.string().optional(),
+    INNGEST_EVENT_KEY: z.string().optional(),
+    INNGEST_SIGNING_KEY: z.string().optional(),
     OPENROUTER_API_KEY: z.string().optional(),
     OPENAI_API_KEY: z.string().optional(),
     DEEPSEEK_API_KEY: z.string().optional(),
